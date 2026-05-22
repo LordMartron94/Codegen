@@ -32,6 +32,8 @@ const (
 	KindTypeDefinedDecl
 	/* KindConstGroupDecl is a parenthesized const block. */
 	KindConstGroupDecl
+	/* KindVarDecl is a package-level var declaration. */
+	KindVarDecl
 	/* KindFuncDecl is a function declaration. */
 	KindFuncDecl
 
@@ -68,6 +70,8 @@ const (
 	KindIntLitExpr
 	/* KindNilLitExpr is a nil literal expression. */
 	KindNilLitExpr
+	/* KindBoolLitExpr is a boolean literal expression. */
+	KindBoolLitExpr
 	/* KindBinaryExpr is a binary expression. */
 	KindBinaryExpr
 	/* KindCompositeLitExpr is a composite literal expression. */

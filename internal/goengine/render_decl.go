@@ -37,6 +37,11 @@ func renderImportBlock(ctx *engine.RenderContext, node ast.Node) error {
 
 func renderTypeStructDecl(ctx *engine.RenderContext, node ast.Node) error {
 	decl := node.(goast.TypeStructDecl)
+	if decl.Doc != "" {
+		if err := renderDocumentation(ctx, decl.Name, decl.Doc); err != nil {
+			return err
+		}
+	}
 	emit.EmitterWriteLineFormatted(ctx.Emitter, "type %s struct {", decl.Name)
 	emit.EmitterIndent(ctx.Emitter)
 	for _, field := range decl.Fields {
@@ -127,6 +132,26 @@ func renderConstGroupDecl(ctx *engine.RenderContext, node ast.Node) error {
 	}
 	emit.EmitterDedent(ctx.Emitter)
 	emit.EmitterWriteLine(ctx.Emitter, ")")
+	return nil
+}
+
+func renderVarDecl(ctx *engine.RenderContext, node ast.Node) error {
+	decl := node.(goast.VarDecl)
+	if decl.Doc != "" {
+		if err := renderDocumentation(ctx, decl.Name, decl.Doc); err != nil {
+			return err
+		}
+	}
+	emit.EmitterWriteFormatted(ctx.Emitter, "var %s = ", decl.Name)
+	if decl.Init == nil {
+		emit.EmitterWrite(ctx.Emitter, "nil")
+		emit.EmitterLineBreak(ctx.Emitter)
+		return nil
+	}
+	if err := engine.EngineRenderExpr(ctx, decl.Init); err != nil {
+		return err
+	}
+	emit.EmitterLineBreak(ctx.Emitter)
 	return nil
 }
 

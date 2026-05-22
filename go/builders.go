@@ -82,6 +82,11 @@ ConstGroupDecl declares a parenthesized Go const block.
 type ConstGroupDecl = goast.ConstGroupDecl
 
 /*
+VarDecl declares a package-level variable initialized by a composite literal.
+*/
+type VarDecl = goast.VarDecl
+
+/*
 StructFieldDecl describes one field in a Go struct.
 */
 type StructFieldDecl = goast.StructFieldDecl
@@ -172,6 +177,11 @@ IntLitExpr is an integer literal.
 type IntLitExpr = goast.IntLitExpr
 
 /*
+BoolLitExpr is a boolean literal.
+*/
+type BoolLitExpr = goast.BoolLitExpr
+
+/*
 NilLitExpr is the Go nil literal.
 */
 type NilLitExpr = goast.NilLitExpr
@@ -222,6 +232,7 @@ const (
 	KindTypeStructDecl   = goast.KindTypeStructDecl
 	KindTypeDefinedDecl  = goast.KindTypeDefinedDecl
 	KindConstGroupDecl   = goast.KindConstGroupDecl
+	KindVarDecl          = goast.KindVarDecl
 	KindFuncDecl         = goast.KindFuncDecl
 	KindBlockStmt        = goast.KindBlockStmt
 	KindVarDeclStmt      = goast.KindVarDeclStmt
@@ -239,6 +250,7 @@ const (
 	KindStringLitExpr    = goast.KindStringLitExpr
 	KindIntLitExpr       = goast.KindIntLitExpr
 	KindNilLitExpr       = goast.KindNilLitExpr
+	KindBoolLitExpr      = goast.KindBoolLitExpr
 	KindBinaryExpr       = goast.KindBinaryExpr
 	KindCompositeLitExpr = goast.KindCompositeLitExpr
 	BinaryOpEq           = goast.BinaryOpEq
@@ -246,6 +258,7 @@ const (
 	TypeExprKindNamed    = goast.TypeExprKindNamed
 	TypeExprKindPointer  = goast.TypeExprKindPointer
 	TypeExprKindSlice    = goast.TypeExprKindSlice
+	TypeExprKindArray    = goast.TypeExprKindArray
 	TypeExprKindFunc     = goast.TypeExprKindFunc
 )
 
@@ -269,8 +282,8 @@ func DeclImportBlock(paths ...string) ImportBlock {
 	return goast.DeclImportBlock(paths...)
 }
 
-func DeclTypeStruct(name string, fields []StructFieldDecl) TypeStructDecl {
-	return goast.DeclTypeStruct(name, fields)
+func DeclTypeStruct(name string, fields []StructFieldDecl, doc string) TypeStructDecl {
+	return goast.DeclTypeStruct(name, fields, doc)
 }
 
 func DeclTypeDefined(name string, underlying TypeExpr, isAlias bool, doc string, leading ...codegen.Node) TypeDefinedDecl {
@@ -296,6 +309,10 @@ func DeclConstGroup(specs []ConstSpec, doc string, separateDocumentedSpecs bool,
 	return goast.DeclConstGroup(specs, doc, separateDocumentedSpecs, leading...)
 }
 
+func DeclVar(name string, init *CompositeLitExpr, doc string) VarDecl {
+	return goast.DeclVar(name, init, doc)
+}
+
 func ConstSpecNew(name string, typ *TypeExpr, value string, doc string) ConstSpec {
 	return goast.ConstSpecNew(name, typ, value, doc)
 }
@@ -307,6 +324,17 @@ func TypeExprNamedPtr(name string) *TypeExpr {
 
 func StructFieldType(name string, typ TypeExpr) StructFieldDecl {
 	return goast.StructFieldType(name, typ)
+}
+
+func StructFieldTypeDoc(name string, typ TypeExpr, doc string, leading ...codegen.Node) StructFieldDecl {
+	return goast.StructFieldTypeDoc(name, typ, doc, leading...)
+}
+
+/*
+LayoutBlankLineNode returns a blank line layout node for struct field Leading spacing.
+*/
+func LayoutBlankLineNode() codegen.Node {
+	return goast.LayoutBlankLineNew()
 }
 
 func StructFieldFunc(name string, sig FuncTypeSig) StructFieldDecl {
@@ -323,6 +351,17 @@ func TypeExprNamed(name string) TypeExpr {
 
 func TypeExprPointer(elem TypeExpr) TypeExpr {
 	return goast.TypeExprPointer(elem)
+}
+
+func TypeExprArray(length string, elem TypeExpr) TypeExpr {
+	return goast.TypeExprArray(length, elem)
+}
+
+/*
+TypeExprFunc builds a Go function type expression.
+*/
+func TypeExprFunc(params []ParamType, returns []TypeExpr) TypeExpr {
+	return goast.TypeExprFunc(params, returns)
 }
 
 func DeclFunc(name string, params []ParamType, returns []TypeExpr, body BlockStmt) FuncDecl {
@@ -351,6 +390,10 @@ func ExprCall(callee ast.Expr, args ...ast.Expr) *CallExpr {
 
 func ExprStringLit(value string) *StringLitExpr {
 	return goast.ExprStringLit(value)
+}
+
+func ExprBoolLit(value bool) *BoolLitExpr {
+	return goast.ExprBoolLit(value)
 }
 
 func ExprIntLit(value int64) *IntLitExpr {

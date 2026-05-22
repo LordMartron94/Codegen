@@ -10,6 +10,7 @@ func (*CallExpr) IsExpr()         {}
 func (*StringLitExpr) IsExpr()    {}
 func (*IntLitExpr) IsExpr()       {}
 func (*NilLitExpr) IsExpr()       {}
+func (*BoolLitExpr) IsExpr()      {}
 func (*BinaryExpr) IsExpr()       {}
 func (*CompositeLitExpr) IsExpr() {}
 
@@ -97,6 +98,15 @@ type NilLitExpr struct{}
 func (e *NilLitExpr) NodeKind() ast.NodeKind { return KindNilLitExpr }
 
 /*
+BoolLitExpr is a boolean literal value.
+*/
+type BoolLitExpr struct {
+	Value bool
+}
+
+func (e *BoolLitExpr) NodeKind() ast.NodeKind { return KindBoolLitExpr }
+
+/*
 BinaryExpr combines two expressions with a binary operator.
 */
 type BinaryExpr struct {
@@ -157,6 +167,10 @@ func ExprIntLit(value int64) *IntLitExpr {
 
 func ExprNil() *NilLitExpr {
 	return &NilLitExpr{}
+}
+
+func ExprBoolLit(value bool) *BoolLitExpr {
+	return &BoolLitExpr{Value: value}
 }
 
 func ExprBinary(op BinaryOp, left ast.Expr, right ast.Expr) *BinaryExpr {

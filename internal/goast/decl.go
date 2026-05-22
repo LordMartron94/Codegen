@@ -59,6 +59,7 @@ Renders as type Name struct { ... } in Go.
 */
 type TypeStructDecl struct {
 	Name   string
+	Doc    string
 	Fields []StructFieldDecl
 }
 
@@ -109,6 +110,17 @@ type ConstGroupDecl struct {
 func (ConstGroupDecl) NodeKind() ast.NodeKind { return KindConstGroupDecl }
 
 /*
+VarDecl declares a package-level variable initialized by a composite literal.
+*/
+type VarDecl struct {
+	Doc  string
+	Name string
+	Init *CompositeLitExpr
+}
+
+func (VarDecl) NodeKind() ast.NodeKind { return KindVarDecl }
+
+/*
 FuncDecl declares a function with signature and body.
 
 [Context]
@@ -131,8 +143,42 @@ func DeclImportBlock(paths ...string) ImportBlock {
 	return ImportBlock{Paths: paths}
 }
 
-func DeclTypeStruct(name string, fields []StructFieldDecl) TypeStructDecl {
-	return TypeStructDecl{Name: name, Fields: fields}
+func DeclTypeStruct(name string, fields []StructFieldDecl, doc string) TypeStructDecl {
+	return TypeStructDecl{Name: name, Doc: doc, Fields: StructFieldsWithDocSpacing(fields)}
+}
+
+/*
+StructFieldsWithDocSpacing inserts a blank line before each documented field after the first.
+
+[Context]
+Separates struct member doc blocks so LSP hover renderers treat each field as its own item.
+*/
+func StructFieldsWithDocSpacing(fields []StructFieldDecl) []StructFieldDecl {
+	if len(fields) <= 1 {
+		return fields
+	}
+
+	out := make([]StructFieldDecl, len(fields))
+	for i, field := range fields {
+		out[i] = field
+		if i > 0 && field.Doc != "" && !structFieldLeadingHasBlankLine(field.Leading) {
+			out[i].Leading = append([]ast.Node{LayoutBlankLineNew()}, field.Leading...)
+		}
+	}
+	return out
+}
+
+func structFieldLeadingHasBlankLine(leading []ast.Node) bool {
+	for _, node := range leading {
+		if _, ok := node.(BlankLine); ok {
+			return true
+		}
+	}
+	return false
+}
+
+func DeclVar(name string, init *CompositeLitExpr, doc string) VarDecl {
+	return VarDecl{Name: name, Init: init, Doc: doc}
 }
 
 func DeclFunc(name string, params []ParamType, returns []TypeExpr, body BlockStmt) FuncDecl {

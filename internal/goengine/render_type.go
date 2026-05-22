@@ -37,6 +37,12 @@ func GoRenderTypeExpr(ctx *engine.RenderContext, typ goast.TypeExpr) error {
 			return fmt.Errorf("goengine: slice type missing element")
 		}
 		return GoRenderTypeExpr(ctx, *typ.Elem)
+	case goast.TypeExprKindArray:
+		if typ.ArrayLen == "" || typ.Elem == nil {
+			return fmt.Errorf("goengine: array type missing length or element")
+		}
+		emit.EmitterWriteFormatted(ctx.Emitter, "[%s]", typ.ArrayLen)
+		return GoRenderTypeExpr(ctx, *typ.Elem)
 	case goast.TypeExprKindFunc:
 		emit.EmitterWrite(ctx.Emitter, "func(")
 		for i, param := range typ.Params {

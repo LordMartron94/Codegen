@@ -1,5 +1,7 @@
 package goast
 
+import "strings"
+
 /*
 TypeExprKind identifies a type-expression variant.
 
@@ -12,6 +14,7 @@ const (
 	TypeExprKindNamed TypeExprKind = iota
 	TypeExprKindPointer
 	TypeExprKindSlice
+	TypeExprKindArray
 	TypeExprKindFunc
 )
 
@@ -24,10 +27,11 @@ Only NamedType uses a bare identifier string; PointerType and SliceType compose 
 type TypeExpr struct {
 	Kind TypeExprKind
 
-	Named   string
-	Elem    *TypeExpr
-	Params  []ParamType
-	Returns []TypeExpr
+	Named    string
+	ArrayLen string
+	Elem     *TypeExpr
+	Params   []ParamType
+	Returns  []TypeExpr
 }
 
 /*
@@ -51,6 +55,10 @@ func TypeExprPointer(elem TypeExpr) TypeExpr {
 
 func TypeExprSlice(elem TypeExpr) TypeExpr {
 	return TypeExpr{Kind: TypeExprKindSlice, Elem: &elem}
+}
+
+func TypeExprArray(length string, elem TypeExpr) TypeExpr {
+	return TypeExpr{Kind: TypeExprKindArray, ArrayLen: length, Elem: &elem}
 }
 
 func TypeExprFunc(params []ParamType, returns []TypeExpr) TypeExpr {
@@ -78,6 +86,18 @@ func TypeExprFromGoTypeString(typeString string) (TypeExpr, error) {
 	}
 
 	remaining := typeString
+	if len(remaining) > 0 && remaining[0] == '[' {
+		closeIndex := strings.Index(remaining, "]")
+		if closeIndex <= 1 {
+			return TypeExpr{}, errMalformedArrayType
+		}
+		length := remaining[1:closeIndex]
+		inner, err := TypeExprFromGoTypeString(remaining[closeIndex+1:])
+		if err != nil {
+			return TypeExpr{}, err
+		}
+		return TypeExprArray(length, inner), nil
+	}
 	if len(remaining) >= 2 && remaining[:2] == "[]" {
 		inner, err := TypeExprFromGoTypeString(remaining[2:])
 		if err != nil {
@@ -95,7 +115,10 @@ func TypeExprFromGoTypeString(typeString string) (TypeExpr, error) {
 	return TypeExprNamed(remaining), nil
 }
 
-var errEmptyTypeString = &typeExprError{message: "type string is empty"}
+var (
+	errEmptyTypeString    = &typeExprError{message: "type string is empty"}
+	errMalformedArrayType = &typeExprError{message: "malformed array type"}
+)
 
 type typeExprError struct {
 	message string

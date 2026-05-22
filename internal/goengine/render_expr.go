@@ -80,6 +80,16 @@ func renderNilLitExpr(ctx *engine.RenderContext, node ast.Node) error {
 	return nil
 }
 
+func renderBoolLitExpr(ctx *engine.RenderContext, node ast.Node) error {
+	expr := node.(*goast.BoolLitExpr)
+	if expr.Value {
+		emit.EmitterWrite(ctx.Emitter, "true")
+	} else {
+		emit.EmitterWrite(ctx.Emitter, "false")
+	}
+	return nil
+}
+
 func renderBinaryExpr(ctx *engine.RenderContext, node ast.Node) error {
 	expr := node.(*goast.BinaryExpr)
 	if err := engine.EngineRenderExpr(ctx, expr.Left); err != nil {

@@ -29,6 +29,7 @@ func GoEngineCreate() *engine.Engine {
 	engine.EngineRegister(eng, goast.KindTypeStructDecl, renderTypeStructDecl)
 	engine.EngineRegister(eng, goast.KindTypeDefinedDecl, renderTypeDefinedDecl)
 	engine.EngineRegister(eng, goast.KindConstGroupDecl, renderConstGroupDecl)
+	engine.EngineRegister(eng, goast.KindVarDecl, renderVarDecl)
 	engine.EngineRegister(eng, goast.KindFuncDecl, renderFuncDecl)
 
 	engine.EngineRegister(eng, goast.KindBlockStmt, renderBlockStmtNode)
@@ -48,6 +49,7 @@ func GoEngineCreate() *engine.Engine {
 	engine.EngineRegister(eng, goast.KindStringLitExpr, renderStringLitExpr)
 	engine.EngineRegister(eng, goast.KindIntLitExpr, renderIntLitExpr)
 	engine.EngineRegister(eng, goast.KindNilLitExpr, renderNilLitExpr)
+	engine.EngineRegister(eng, goast.KindBoolLitExpr, renderBoolLitExpr)
 	engine.EngineRegister(eng, goast.KindBinaryExpr, renderBinaryExpr)
 	engine.EngineRegister(eng, goast.KindCompositeLitExpr, renderCompositeLitExpr)
 
