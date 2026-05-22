@@ -16,6 +16,8 @@ Passed to every registered renderer so nested nodes can recurse through EngineRe
 type RenderContext struct {
 	Engine  *Engine
 	Emitter *emit.Emitter
+	/* Data holds optional frontend-specific render configuration (for example goast.RenderOptions). */
+	Data any
 }
 
 /*

@@ -46,7 +46,7 @@ func renderTypeStructDecl(ctx *engine.RenderContext, node ast.Node) error {
 			}
 		}
 		if field.Doc != "" {
-			if err := engine.EngineRenderNode(ctx, goast.LayoutGoDocCommentFromText(field.Doc)); err != nil {
+			if err := renderDocumentation(ctx, field.Name, field.Doc); err != nil {
 				return err
 			}
 		}
@@ -76,7 +76,7 @@ func renderTypeDefinedDecl(ctx *engine.RenderContext, node ast.Node) error {
 		}
 	}
 	if decl.Doc != "" {
-		if err := engine.EngineRenderNode(ctx, goast.LayoutGoDocCommentFromText(decl.Doc)); err != nil {
+		if err := renderDocumentation(ctx, decl.Name, decl.Doc); err != nil {
 			return err
 		}
 	}
@@ -100,16 +100,19 @@ func renderConstGroupDecl(ctx *engine.RenderContext, node ast.Node) error {
 		}
 	}
 	if decl.Doc != "" {
-		if err := engine.EngineRenderNode(ctx, goast.LayoutGoDocCommentFromText(decl.Doc)); err != nil {
+		if err := renderDocumentation(ctx, "", decl.Doc); err != nil {
 			return err
 		}
 	}
 	emit.EmitterWriteLine(ctx.Emitter, "const (")
 	emit.EmitterIndent(ctx.Emitter)
-	for _, spec := range decl.Specs {
+	for specIndex, spec := range decl.Specs {
+		if spec.Doc != "" && decl.SeparateDocumentedSpecs && specIndex > 0 {
+			emit.EmitterLineBreak(ctx.Emitter)
+		}
 		if spec.Doc != "" {
-			for _, line := range goDocLinesFromText(spec.Doc) {
-				emit.EmitterWriteLineFormatted(ctx.Emitter, "// %s", line)
+			if err := renderDocumentation(ctx, spec.Name, spec.Doc); err != nil {
+				return err
 			}
 		}
 		emit.EmitterWriteFormatted(ctx.Emitter, "%s", spec.Name)
@@ -125,11 +128,6 @@ func renderConstGroupDecl(ctx *engine.RenderContext, node ast.Node) error {
 	emit.EmitterDedent(ctx.Emitter)
 	emit.EmitterWriteLine(ctx.Emitter, ")")
 	return nil
-}
-
-func goDocLinesFromText(text string) []string {
-	comment := goast.LayoutGoDocCommentFromText(text)
-	return comment.Lines
 }
 
 func renderFuncDecl(ctx *engine.RenderContext, node ast.Node) error {

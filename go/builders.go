@@ -12,6 +12,21 @@ Kind identifies a Go AST node variant. See internal/goast for all kind constants
 type Kind = goast.Kind
 
 /*
+CommentStyle selects how documentation text is rendered in Go output.
+*/
+type CommentStyle = goast.CommentStyle
+
+/*
+RenderOptions configures Go backend rendering behavior.
+*/
+type RenderOptions = goast.RenderOptions
+
+const (
+	CommentStyleLine  = goast.CommentStyleLine
+	CommentStyleBlock = goast.CommentStyleBlock
+)
+
+/*
 File is the root node for a generated Go source file.
 */
 type File = goast.File
@@ -262,8 +277,23 @@ func DeclTypeDefined(name string, underlying TypeExpr, isAlias bool, doc string,
 	return goast.DeclTypeDefined(name, underlying, isAlias, doc, leading...)
 }
 
-func DeclConstGroup(specs []ConstSpec, doc string, leading ...codegen.Node) ConstGroupDecl {
-	return goast.DeclConstGroup(specs, doc, leading...)
+func RenderOptionsDefault() RenderOptions {
+	return goast.RenderOptionsDefault()
+}
+
+func RenderOptionsEnumBindings() RenderOptions {
+	return goast.RenderOptionsEnumBindings()
+}
+
+/*
+GoDocFormatExported formats documentation so it begins with the exported identifier name.
+*/
+func GoDocFormatExported(subject string, doc string) string {
+	return goast.GoDocFormatExported(subject, doc)
+}
+
+func DeclConstGroup(specs []ConstSpec, doc string, separateDocumentedSpecs bool, leading ...codegen.Node) ConstGroupDecl {
+	return goast.DeclConstGroup(specs, doc, separateDocumentedSpecs, leading...)
 }
 
 func ConstSpecNew(name string, typ *TypeExpr, value string, doc string) ConstSpec {

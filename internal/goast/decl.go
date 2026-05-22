@@ -100,9 +100,10 @@ ConstGroupDecl declares a parenthesized const block.
 Renders as const ( ... ) in Go. Each spec may include an optional typed name and doc as line comments.
 */
 type ConstGroupDecl struct {
-	Leading []ast.Node
-	Doc     string
-	Specs   []ConstSpec
+	Leading                 []ast.Node
+	Doc                     string
+	Specs                   []ConstSpec
+	SeparateDocumentedSpecs bool
 }
 
 func (ConstGroupDecl) NodeKind() ast.NodeKind { return KindConstGroupDecl }
@@ -158,8 +159,13 @@ func DeclTypeDefined(name string, underlying TypeExpr, isAlias bool, doc string,
 	return TypeDefinedDecl{Name: name, Underlying: underlying, IsAlias: isAlias, Doc: doc, Leading: leading}
 }
 
-func DeclConstGroup(specs []ConstSpec, doc string, leading ...ast.Node) ConstGroupDecl {
-	return ConstGroupDecl{Specs: specs, Doc: doc, Leading: leading}
+func DeclConstGroup(specs []ConstSpec, doc string, separateDocumentedSpecs bool, leading ...ast.Node) ConstGroupDecl {
+	return ConstGroupDecl{
+		Specs:                   specs,
+		Doc:                     doc,
+		SeparateDocumentedSpecs: separateDocumentedSpecs,
+		Leading:                 leading,
+	}
 }
 
 func ConstSpecNew(name string, typ *TypeExpr, value string, doc string) ConstSpec {

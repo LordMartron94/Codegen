@@ -51,9 +51,28 @@ Generated source or a render error.
 None; uses a fresh emitter internally.
 */
 func GoFileRender(file goast.File) (string, error) {
+	return GoFileRenderWithOptions(file, goast.RenderOptionsDefault())
+}
+
+/*
+GoFileRenderWithOptions renders a file AST to Go source text using the given render options.
+
+[Parameters]
+file — root file node with elements.
+options — Go backend render configuration attached to the render context.
+
+[Returns]
+Generated source or a render error.
+*/
+func GoFileRenderWithOptions(file goast.File, options goast.RenderOptions) (string, error) {
 	eng := GoEngineCreate()
 	emitter := GoEmitterCreate()
-	if err := engine.EngineRender(eng, &emitter, file); err != nil {
+	ctx := &engine.RenderContext{
+		Engine:  eng,
+		Emitter: &emitter,
+		Data:    options,
+	}
+	if err := engine.EngineRenderNode(ctx, file); err != nil {
 		return "", err
 	}
 	return emit.EmitterRender(&emitter), nil
