@@ -2,15 +2,15 @@
 Package codegen provides a language-agnostic AST and registration-based code generation engines.
 
 [Context]
-Build an AST tree, configure an engine with renderers (or use codegen/go for Go), and render to source text through an injected emitter. The core engine uses a dense slice registry indexed by NodeKind for O(1) dispatch. Go-specific shapes (types, declarations) live in internal/goast; neutral layout and expression nodes live in internal/ast.
+Build a language-neutral AST tree, register renderers on an engine, and render to source text through an emitter. Go-specific declarations, types, and statements live in the codegen/go subpackage. The Go backend registers renderers for all node kinds in internal/ast and internal/goast.
 
 [Example]
 
-	eng := gocode.GoEngineCreate()
-	emitter := gocode.GoEmitterCreate()
-	file := DeclFile()
-	_ = EngineRender(eng, &emitter, file)
-	output := EmitterRender(&emitter)
+	eng := codegen.EngineCreate()
+	emitter := codegen.EmitterCreate(4)
+	file := codegen.DeclFile()
+	_ = codegen.EngineRender(eng, &emitter, file)
+	output := codegen.EmitterRender(&emitter)
 */
 package codegen
 
@@ -18,7 +18,6 @@ import (
 	"codegen/internal/ast"
 	"codegen/internal/emit"
 	"codegen/internal/engine"
-	"codegen/internal/goast"
 )
 
 /*
@@ -60,49 +59,14 @@ BlankLine inserts vertical spacing in generated output.
 type BlankLine = ast.BlankLine
 
 /*
-LineComment is a single-line annotation (for example a // comment in Go).
+LineComment is a single-line annotation in the target language.
 */
 type LineComment = ast.LineComment
 
 /*
-BlockComment is a multi-line line-comment block (// per line in Go).
+BlockComment is a multi-line line-comment block.
 */
 type BlockComment = ast.BlockComment
-
-/*
-GoDocComment is a Go block documentation comment attached to declarations or fields.
-*/
-type GoDocComment = goast.GoDocComment
-
-/*
-PackageDecl declares the package clause of a generated file.
-*/
-type PackageDecl = goast.PackageDecl
-
-/*
-ImportBlock declares a parenthesized import block.
-*/
-type ImportBlock = goast.ImportBlock
-
-/*
-TypeStructDecl declares a struct type with fields.
-*/
-type TypeStructDecl = goast.TypeStructDecl
-
-/*
-StructFieldDecl describes one field in a struct, optionally with documentation and leading layout.
-*/
-type StructFieldDecl = goast.StructFieldDecl
-
-/*
-FuncTypeSig is a function type used as a struct field type.
-*/
-type FuncTypeSig = goast.FuncTypeSig
-
-/*
-FuncDecl declares a function with signature and body block.
-*/
-type FuncDecl = goast.FuncDecl
 
 /*
 BlockStmt groups statements and optional leading layout nodes.
@@ -110,24 +74,9 @@ BlockStmt groups statements and optional leading layout nodes.
 type BlockStmt = ast.BlockStmt
 
 /*
-VarDeclStmt declares a variable with var syntax.
-*/
-type VarDeclStmt = goast.VarDeclStmt
-
-/*
-ShortVarDeclStmt declares and initializes a variable with := syntax.
-*/
-type ShortVarDeclStmt = ast.ShortVarDeclStmt
-
-/*
-AssignStmt assigns an expression to a name with = syntax.
+AssignStmt assigns an expression to a name.
 */
 type AssignStmt = ast.AssignStmt
-
-/*
-RangeLoopStmt iterates a slice with for i := range collection.
-*/
-type RangeLoopStmt = ast.RangeLoopStmt
 
 /*
 IfStmt conditionally executes a body, optionally with an init statement.
@@ -180,11 +129,6 @@ IntLitExpr is an integer literal.
 type IntLitExpr = ast.IntLitExpr
 
 /*
-NilLitExpr is the nil literal.
-*/
-type NilLitExpr = ast.NilLitExpr
-
-/*
 BinaryExpr combines two expressions with a binary operator.
 */
 type BinaryExpr = ast.BinaryExpr
@@ -193,31 +137,6 @@ type BinaryExpr = ast.BinaryExpr
 BinaryOp identifies a binary operator (equality or inequality).
 */
 type BinaryOp = ast.BinaryOp
-
-/*
-FieldInit pairs a field name with an initializing expression in a composite literal.
-*/
-type FieldInit = ast.FieldInit
-
-/*
-CompositeLitExpr is a struct or slice composite literal.
-*/
-type CompositeLitExpr = ast.CompositeLitExpr
-
-/*
-TypeExpr describes a Go type in generated code without embedding syntax fragments.
-*/
-type TypeExpr = goast.TypeExpr
-
-/*
-TypeExprKind identifies a type-expression variant.
-*/
-type TypeExprKind = goast.TypeExprKind
-
-/*
-ParamType pairs a parameter name with its type.
-*/
-type ParamType = goast.ParamType
 
 /*
 Emitter is a language-neutral buffered text sink with indentation support.
@@ -246,8 +165,34 @@ const (
 	NodeKindLineComment = ast.NodeKindLineComment
 	/* NodeKindBlockComment identifies a multi-line line-comment block. */
 	NodeKindBlockComment = ast.NodeKindBlockComment
-	/* NodeKindGoDocComment identifies a Go block documentation comment node. */
-	NodeKindGoDocComment = ast.NodeKindGoDocComment
+	/* NodeKindFile identifies a generated source file root. */
+	NodeKindFile = ast.NodeKindFile
+	/* NodeKindBlockStmt identifies a statement block. */
+	NodeKindBlockStmt = ast.NodeKindBlockStmt
+	/* NodeKindAssignStmt identifies an assignment statement. */
+	NodeKindAssignStmt = ast.NodeKindAssignStmt
+	/* NodeKindIfStmt identifies a conditional statement. */
+	NodeKindIfStmt = ast.NodeKindIfStmt
+	/* NodeKindReturnStmt identifies a return statement. */
+	NodeKindReturnStmt = ast.NodeKindReturnStmt
+	/* NodeKindExprStmt identifies an expression statement. */
+	NodeKindExprStmt = ast.NodeKindExprStmt
+	/* NodeKindIdentExpr identifies an identifier expression. */
+	NodeKindIdentExpr = ast.NodeKindIdentExpr
+	/* NodeKindSelectorExpr identifies a selector expression. */
+	NodeKindSelectorExpr = ast.NodeKindSelectorExpr
+	/* NodeKindIndexExpr identifies an index expression. */
+	NodeKindIndexExpr = ast.NodeKindIndexExpr
+	/* NodeKindAddressOfExpr identifies an address-of expression. */
+	NodeKindAddressOfExpr = ast.NodeKindAddressOfExpr
+	/* NodeKindCallExpr identifies a call expression. */
+	NodeKindCallExpr = ast.NodeKindCallExpr
+	/* NodeKindStringLitExpr identifies a string literal expression. */
+	NodeKindStringLitExpr = ast.NodeKindStringLitExpr
+	/* NodeKindIntLitExpr identifies an integer literal expression. */
+	NodeKindIntLitExpr = ast.NodeKindIntLitExpr
+	/* NodeKindBinaryExpr identifies a binary expression. */
+	NodeKindBinaryExpr = ast.NodeKindBinaryExpr
 
 	/* NodeKindCount is the exclusive upper bound for sizing engine renderer slices. */
 	NodeKindCount = ast.NodeKindCount
@@ -358,22 +303,6 @@ func FileElementFrom(node Node) FileElement {
 }
 
 /*
-TypeExprFromGoTypeString parses a Go type spelling into a TypeExpr tree.
-
-[Parameters]
-typeString — type identifier such as "*uint32" or "[]commandMapping".
-
-[Returns]
-The parsed TypeExpr, or an error when typeString is empty.
-
-[Errors]
-Returns an error when typeString is empty.
-*/
-func TypeExprFromGoTypeString(typeString string) (TypeExpr, error) {
-	return goast.TypeExprFromGoTypeString(typeString)
-}
-
-/*
 DeclFile constructs a file root node from ordered top-level elements.
 
 [Parameters]
@@ -384,132 +313,6 @@ A File AST root.
 */
 func DeclFile(elements ...FileElement) File {
 	return ast.DeclFile(elements...)
-}
-
-/*
-DeclPackage constructs a package declaration node.
-
-[Parameters]
-name — package name written in the output file.
-
-[Returns]
-A PackageDecl node.
-*/
-func DeclPackage(name string) PackageDecl {
-	return goast.DeclPackage(name)
-}
-
-/*
-DeclImportBlock constructs a parenthesized import block.
-
-[Parameters]
-paths — import paths in block order.
-
-[Returns]
-An ImportBlock node.
-*/
-func DeclImportBlock(paths ...string) ImportBlock {
-	return goast.DeclImportBlock(paths...)
-}
-
-/*
-DeclTypeStruct constructs a struct type declaration with fields.
-
-[Parameters]
-name — struct type name.
-fields — field declarations including optional documentation.
-
-[Returns]
-A TypeStructDecl node.
-*/
-func DeclTypeStruct(name string, fields []StructFieldDecl) TypeStructDecl {
-	return goast.DeclTypeStruct(name, fields)
-}
-
-/*
-StructFieldType declares a struct field with a plain type.
-
-[Parameters]
-name — field name.
-typ — field type expression.
-
-[Returns]
-A StructFieldDecl without documentation.
-*/
-func StructFieldType(name string, typ TypeExpr) StructFieldDecl {
-	return goast.StructFieldType(name, typ)
-}
-
-/*
-StructFieldFunc declares a struct field with an embedded function type.
-
-[Parameters]
-name — field name.
-sig — function type signature.
-
-[Returns]
-A StructFieldDecl without documentation.
-*/
-func StructFieldFunc(name string, sig FuncTypeSig) StructFieldDecl {
-	return goast.StructFieldFunc(name, sig)
-}
-
-/*
-StructFieldFuncDoc declares a documented struct field with an embedded function type.
-
-[Parameters]
-name — field identifier.
-sig — function type signature.
-doc — Go documentation block body rendered before the field.
-leading — optional layout nodes (BlankLine, LineComment) before the doc.
-
-[Returns]
-A StructFieldDecl with documentation and leading layout.
-*/
-func StructFieldFuncDoc(name string, sig FuncTypeSig, doc string, leading ...Node) StructFieldDecl {
-	return goast.StructFieldFuncDoc(name, sig, doc, leading...)
-}
-
-/*
-TypeExprNamed constructs a named type identifier.
-
-[Parameters]
-name — type name spelling.
-
-[Returns]
-A TypeExpr with Kind TypeExprKindNamed.
-*/
-func TypeExprNamed(name string) TypeExpr {
-	return goast.TypeExprNamed(name)
-}
-
-/*
-TypeExprPointer constructs a pointer type expression.
-
-[Parameters]
-elem — pointed-to type.
-
-[Returns]
-A TypeExpr with Kind TypeExprKindPointer.
-*/
-func TypeExprPointer(elem TypeExpr) TypeExpr {
-	return goast.TypeExprPointer(elem)
-}
-
-/*
-DeclFunc constructs a function declaration with body.
-
-[Parameters]
-name — function name.
-params — parameter name/type pairs.
-returns — result types (empty for no return).
-body — function body block.
-
-[Returns]
-A FuncDecl node.
-*/
-func DeclFunc(name string, params []ParamType, returns []TypeExpr, body BlockStmt) FuncDecl {
-	return goast.DeclFunc(name, params, returns, body)
 }
 
 /*
@@ -584,7 +387,7 @@ func ExprCall(callee Expr, args ...Expr) *CallExpr {
 ExprStringLit constructs a string literal expression.
 
 [Parameters]
-value — string value (escaped by the Go renderer).
+value — string value.
 
 [Returns]
 A StringLitExpr node.
@@ -607,16 +410,6 @@ func ExprIntLit(value int64) *IntLitExpr {
 }
 
 /*
-ExprNil constructs a nil literal expression.
-
-[Returns]
-A NilLitExpr node.
-*/
-func ExprNil() *NilLitExpr {
-	return ast.ExprNil()
-}
-
-/*
 ExprBinary constructs a binary expression.
 
 [Parameters]
@@ -632,34 +425,6 @@ func ExprBinary(op BinaryOp, left Expr, right Expr) *BinaryExpr {
 }
 
 /*
-ExprCompositeLit constructs a struct composite literal.
-
-[Parameters]
-typeName — composite type name.
-fields — field initializer pairs.
-
-[Returns]
-A CompositeLitExpr node with IsSlice false.
-*/
-func ExprCompositeLit(typeName string, fields []FieldInit) *CompositeLitExpr {
-	return ast.ExprCompositeLit(typeName, fields)
-}
-
-/*
-ExprSliceCompositeLit constructs a slice of composite literals.
-
-[Parameters]
-elementTypeName — slice element type name.
-elements — composite literal expressions for each element.
-
-[Returns]
-A CompositeLitExpr node with IsSlice true.
-*/
-func ExprSliceCompositeLit(elementTypeName string, elements []Expr) *CompositeLitExpr {
-	return ast.ExprSliceCompositeLit(elementTypeName, elements)
-}
-
-/*
 StmtBlock constructs a statement block.
 
 [Parameters]
@@ -670,50 +435,6 @@ A BlockStmt node.
 */
 func StmtBlock(stmts ...Stmt) BlockStmt {
 	return ast.StmtBlock(stmts...)
-}
-
-/*
-StmtVarDecl constructs a var declaration statement.
-
-[Parameters]
-name — variable name.
-typ — variable type.
-isSlice — when true, renders as var name []typ.
-
-[Returns]
-A VarDeclStmt node.
-*/
-func StmtVarDecl(name string, typ TypeExpr, isSlice bool) VarDeclStmt {
-	return goast.StmtVarDecl(name, typ, isSlice)
-}
-
-/*
-StmtShortVarDecl constructs a short variable declaration with :=.
-
-[Parameters]
-name — variable name.
-rhs — right-hand expression.
-
-[Returns]
-A ShortVarDeclStmt node.
-*/
-func StmtShortVarDecl(name string, rhs Expr) ShortVarDeclStmt {
-	return ast.StmtShortVarDecl(name, rhs)
-}
-
-/*
-StmtRangeLoop constructs a for i := range collection loop.
-
-[Parameters]
-collection — slice identifier to range over.
-elementName — name bound to collection[i] inside the body.
-body — loop body block.
-
-[Returns]
-A RangeLoopStmt node.
-*/
-func StmtRangeLoop(collection string, elementName string, body BlockStmt) RangeLoopStmt {
-	return ast.StmtRangeLoop(collection, elementName, body)
 }
 
 /*
@@ -734,7 +455,7 @@ func StmtIf(condition Expr, body BlockStmt) IfStmt {
 StmtIfWithInit constructs an if statement with init; condition form.
 
 [Parameters]
-init — statement executed before the condition (typically a short var decl).
+init — statement executed before the condition.
 condition — boolean condition evaluated after init.
 body — conditional body block.
 

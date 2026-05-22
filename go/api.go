@@ -1,8 +1,8 @@
 /*
-Package gocode provides the Go code-generation backend and ergonomic AST builders.
+Package gocode provides the Go code-generation backend and Go AST builders.
 
 [Context]
-Consumers build language-agnostic AST nodes from the root codegen package, then render them with GoEngineCreate. Layout helpers insert comments and spacing without hand-rolling layout nodes.
+Build language-neutral nodes with the root codegen package (File, Expr, Stmt, engine). Build Go-specific declarations and types with this package, then render with GoFileRender.
 */
 package gocode
 
