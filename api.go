@@ -1,14 +1,14 @@
 /*
-Package codegen provides a language-agnostic AST and registration-based code generation engines.
+Package codegen provides a language-agnostic codegen engine and emitter.
 
 [Context]
-Build a language-neutral AST tree, register renderers on an engine, and render to source text through an emitter. Go-specific declarations, types, and statements live in the codegen/go subpackage. The Go backend registers renderers for all node kinds in internal/ast and internal/goast.
+Language frontends (for example codegen/go) define their own AST node kinds, node structs, and renderers. Register those renderers on an engine created here, then render through an emitter. The core does not declare any node kind constants or language-specific AST shapes.
 
 [Example]
 
-	eng := codegen.EngineCreate()
-	emitter := codegen.EmitterCreate(4)
-	file := codegen.DeclFile()
+	eng := gocode.GoEngineCreate()
+	emitter := gocode.GoEmitterCreate()
+	file := gocode.DeclFile(...)
 	_ = codegen.EngineRender(eng, &emitter, file)
 	output := codegen.EmitterRender(&emitter)
 */
@@ -22,14 +22,11 @@ import (
 
 /*
 Node is the root interface for every AST value rendered by an engine.
-
-[Context]
-All layout, declaration, statement, and expression nodes implement Node and expose a NodeKind discriminator.
 */
 type Node = ast.Node
 
 /*
-NodeKind identifies an AST variant for engine registration and dispatch.
+NodeKind is an opaque discriminator assigned by a language frontend.
 */
 type NodeKind = ast.NodeKind
 
@@ -44,99 +41,9 @@ Stmt is a statement node executed inside function bodies and blocks.
 type Stmt = ast.Stmt
 
 /*
-File is the root node for a generated source file with ordered top-level elements.
-*/
-type File = ast.File
-
-/*
-FileElement wraps one top-level file child (layout node or declaration).
+FileElement wraps one top-level file child from a language frontend.
 */
 type FileElement = ast.FileElement
-
-/*
-BlankLine inserts vertical spacing in generated output.
-*/
-type BlankLine = ast.BlankLine
-
-/*
-LineComment is a single-line annotation in the target language.
-*/
-type LineComment = ast.LineComment
-
-/*
-BlockComment is a multi-line line-comment block.
-*/
-type BlockComment = ast.BlockComment
-
-/*
-BlockStmt groups statements and optional leading layout nodes.
-*/
-type BlockStmt = ast.BlockStmt
-
-/*
-AssignStmt assigns an expression to a name.
-*/
-type AssignStmt = ast.AssignStmt
-
-/*
-IfStmt conditionally executes a body, optionally with an init statement.
-*/
-type IfStmt = ast.IfStmt
-
-/*
-ReturnStmt returns a value from the enclosing function.
-*/
-type ReturnStmt = ast.ReturnStmt
-
-/*
-ExprStmt executes an expression for side effects.
-*/
-type ExprStmt = ast.ExprStmt
-
-/*
-IdentExpr references an identifier by name.
-*/
-type IdentExpr = ast.IdentExpr
-
-/*
-SelectorExpr selects a field or method on a base expression.
-*/
-type SelectorExpr = ast.SelectorExpr
-
-/*
-IndexExpr indexes a base expression.
-*/
-type IndexExpr = ast.IndexExpr
-
-/*
-AddressOfExpr takes the address of its operand.
-*/
-type AddressOfExpr = ast.AddressOfExpr
-
-/*
-CallExpr invokes a callee with arguments.
-*/
-type CallExpr = ast.CallExpr
-
-/*
-StringLitExpr is a string literal.
-*/
-type StringLitExpr = ast.StringLitExpr
-
-/*
-IntLitExpr is an integer literal.
-*/
-type IntLitExpr = ast.IntLitExpr
-
-/*
-BinaryExpr combines two expressions with a binary operator.
-*/
-type BinaryExpr = ast.BinaryExpr
-
-/*
-BinaryOp identifies a binary operator (equality or inequality).
-*/
-type BinaryOp = ast.BinaryOp
 
 /*
 Emitter is a language-neutral buffered text sink with indentation support.
@@ -158,59 +65,11 @@ RenderFn renders a single AST node kind.
 */
 type RenderFn = engine.RenderFn
 
-const (
-	/* NodeKindBlankLine identifies a vertical spacing node. */
-	NodeKindBlankLine = ast.NodeKindBlankLine
-	/* NodeKindLineComment identifies a single-line comment node. */
-	NodeKindLineComment = ast.NodeKindLineComment
-	/* NodeKindBlockComment identifies a multi-line line-comment block. */
-	NodeKindBlockComment = ast.NodeKindBlockComment
-	/* NodeKindFile identifies a generated source file root. */
-	NodeKindFile = ast.NodeKindFile
-	/* NodeKindBlockStmt identifies a statement block. */
-	NodeKindBlockStmt = ast.NodeKindBlockStmt
-	/* NodeKindAssignStmt identifies an assignment statement. */
-	NodeKindAssignStmt = ast.NodeKindAssignStmt
-	/* NodeKindIfStmt identifies a conditional statement. */
-	NodeKindIfStmt = ast.NodeKindIfStmt
-	/* NodeKindReturnStmt identifies a return statement. */
-	NodeKindReturnStmt = ast.NodeKindReturnStmt
-	/* NodeKindExprStmt identifies an expression statement. */
-	NodeKindExprStmt = ast.NodeKindExprStmt
-	/* NodeKindIdentExpr identifies an identifier expression. */
-	NodeKindIdentExpr = ast.NodeKindIdentExpr
-	/* NodeKindSelectorExpr identifies a selector expression. */
-	NodeKindSelectorExpr = ast.NodeKindSelectorExpr
-	/* NodeKindIndexExpr identifies an index expression. */
-	NodeKindIndexExpr = ast.NodeKindIndexExpr
-	/* NodeKindAddressOfExpr identifies an address-of expression. */
-	NodeKindAddressOfExpr = ast.NodeKindAddressOfExpr
-	/* NodeKindCallExpr identifies a call expression. */
-	NodeKindCallExpr = ast.NodeKindCallExpr
-	/* NodeKindStringLitExpr identifies a string literal expression. */
-	NodeKindStringLitExpr = ast.NodeKindStringLitExpr
-	/* NodeKindIntLitExpr identifies an integer literal expression. */
-	NodeKindIntLitExpr = ast.NodeKindIntLitExpr
-	/* NodeKindBinaryExpr identifies a binary expression. */
-	NodeKindBinaryExpr = ast.NodeKindBinaryExpr
-
-	/* NodeKindCount is the exclusive upper bound for sizing engine renderer slices. */
-	NodeKindCount = ast.NodeKindCount
-
-	/* BinaryOpEq is the == operator. */
-	BinaryOpEq = ast.BinaryOpEq
-	/* BinaryOpNe is the != operator. */
-	BinaryOpNe = ast.BinaryOpNe
-)
-
 /*
-EngineCreate constructs an engine with a pre-allocated renderer slice of length NodeKindCount.
+EngineCreate constructs an engine with an empty renderer registry.
 
 [Returns]
-An engine ready for EngineRegister calls.
-
-[Context]
-Uses dense slice indexing by int(kind) for O(1) dispatch without map hashing.
+An engine ready for EngineRegister calls from a language frontend.
 */
 func EngineCreate() *Engine {
 	return engine.EngineCreate()
@@ -221,7 +80,7 @@ EngineRegister binds a renderer function to a node kind index on the given engin
 
 [Parameters]
 eng — target engine instance.
-kind — node discriminator; used as a direct slice index.
+kind — node discriminator assigned by the language frontend.
 fn — renderer invoked when that kind is encountered.
 */
 func EngineRegister(eng *Engine, kind NodeKind, fn RenderFn) {
@@ -234,7 +93,7 @@ EngineRender renders a root AST node tree into the emitter buffer.
 [Parameters]
 eng — engine with renderers registered for every kind in the tree.
 emitter — output sink to write into.
-root — root node, typically a File.
+root — root node from a language frontend.
 
 [Returns]
 An error when a renderer is missing or rendering fails.
@@ -255,9 +114,6 @@ node — AST node to render.
 
 [Returns]
 An error when no renderer is registered or rendering fails.
-
-[Context]
-Hot path: one index into the renderer slice, no map traversal.
 */
 func EngineRenderNode(ctx *RenderContext, node Node) error {
 	return engine.EngineRenderNode(ctx, node)
@@ -290,204 +146,14 @@ func EmitterRender(emitter *Emitter) string {
 }
 
 /*
-FileElementFrom wraps any node as a FileElement for DeclFile.
+FileElementFrom wraps any node as a FileElement.
 
 [Parameters]
-node — layout or declaration node.
+node — layout or declaration node from a language frontend.
 
 [Returns]
 A FileElement containing node.
 */
 func FileElementFrom(node Node) FileElement {
 	return ast.FileElementFrom(node)
-}
-
-/*
-DeclFile constructs a file root node from ordered top-level elements.
-
-[Parameters]
-elements — layout nodes and declarations in render order.
-
-[Returns]
-A File AST root.
-*/
-func DeclFile(elements ...FileElement) File {
-	return ast.DeclFile(elements...)
-}
-
-/*
-ExprIdent constructs an identifier expression.
-
-[Parameters]
-name — identifier spelling.
-
-[Returns]
-An IdentExpr node.
-*/
-func ExprIdent(name string) *IdentExpr {
-	return ast.ExprIdent(name)
-}
-
-/*
-ExprSelector constructs a selector expression on a base.
-
-[Parameters]
-base — left-hand expression.
-name — selected identifier.
-
-[Returns]
-A SelectorExpr node.
-*/
-func ExprSelector(base Expr, name string) *SelectorExpr {
-	return ast.ExprSelector(base, name)
-}
-
-/*
-ExprIndex constructs an index expression.
-
-[Parameters]
-base — indexed expression.
-index — index expression.
-
-[Returns]
-An IndexExpr node.
-*/
-func ExprIndex(base Expr, index Expr) *IndexExpr {
-	return ast.ExprIndex(base, index)
-}
-
-/*
-ExprAddressOf constructs an address-of expression.
-
-[Parameters]
-operand — expression whose address is taken.
-
-[Returns]
-An AddressOfExpr node.
-*/
-func ExprAddressOf(operand Expr) *AddressOfExpr {
-	return ast.ExprAddressOf(operand)
-}
-
-/*
-ExprCall constructs a function or method call expression.
-
-[Parameters]
-callee — called expression.
-args — argument expressions.
-
-[Returns]
-A CallExpr node.
-*/
-func ExprCall(callee Expr, args ...Expr) *CallExpr {
-	return ast.ExprCall(callee, args...)
-}
-
-/*
-ExprStringLit constructs a string literal expression.
-
-[Parameters]
-value — string value.
-
-[Returns]
-A StringLitExpr node.
-*/
-func ExprStringLit(value string) *StringLitExpr {
-	return ast.ExprStringLit(value)
-}
-
-/*
-ExprIntLit constructs an integer literal expression.
-
-[Parameters]
-value — integer value.
-
-[Returns]
-An IntLitExpr node.
-*/
-func ExprIntLit(value int64) *IntLitExpr {
-	return ast.ExprIntLit(value)
-}
-
-/*
-ExprBinary constructs a binary expression.
-
-[Parameters]
-op — binary operator.
-left — left-hand operand.
-right — right-hand operand.
-
-[Returns]
-A BinaryExpr node.
-*/
-func ExprBinary(op BinaryOp, left Expr, right Expr) *BinaryExpr {
-	return ast.ExprBinary(op, left, right)
-}
-
-/*
-StmtBlock constructs a statement block.
-
-[Parameters]
-stmts — statements executed in order.
-
-[Returns]
-A BlockStmt node.
-*/
-func StmtBlock(stmts ...Stmt) BlockStmt {
-	return ast.StmtBlock(stmts...)
-}
-
-/*
-StmtIf constructs an if statement with a condition expression.
-
-[Parameters]
-condition — boolean condition expression.
-body — conditional body block.
-
-[Returns]
-An IfStmt node without init statement.
-*/
-func StmtIf(condition Expr, body BlockStmt) IfStmt {
-	return ast.StmtIf(condition, body)
-}
-
-/*
-StmtIfWithInit constructs an if statement with init; condition form.
-
-[Parameters]
-init — statement executed before the condition.
-condition — boolean condition evaluated after init.
-body — conditional body block.
-
-[Returns]
-An IfStmt node with init.
-*/
-func StmtIfWithInit(init Stmt, condition Expr, body BlockStmt) IfStmt {
-	return ast.StmtIfWithInit(init, condition, body)
-}
-
-/*
-StmtReturn constructs a return statement.
-
-[Parameters]
-value — returned expression.
-
-[Returns]
-A ReturnStmt node.
-*/
-func StmtReturn(value Expr) ReturnStmt {
-	return ast.StmtReturn(value)
-}
-
-/*
-StmtExpr constructs an expression statement.
-
-[Parameters]
-expr — expression executed for side effects.
-
-[Returns]
-An ExprStmt node.
-*/
-func StmtExpr(expr Expr) ExprStmt {
-	return ast.StmtExpr(expr)
 }

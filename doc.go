@@ -1,6 +1,6 @@
 /*
-Package codegen provides language-agnostic AST nodes and registration-based render engines.
+Package codegen provides a language-agnostic codegen engine and emitter.
 
-Go-specific declarations, types, and statements live in the codegen/go subpackage.
+Language-specific AST node kinds, node shapes, and renderers live in frontend packages such as codegen/go.
 */
 package codegen

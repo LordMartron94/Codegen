@@ -7,16 +7,17 @@ import (
 	"codegen/internal/ast"
 	"codegen/internal/emit"
 	"codegen/internal/engine"
+	"codegen/internal/goast"
 )
 
 func renderIdentExpr(ctx *engine.RenderContext, node ast.Node) error {
-	expr := node.(*ast.IdentExpr)
+	expr := node.(*goast.IdentExpr)
 	emit.EmitterWrite(ctx.Emitter, expr.Name)
 	return nil
 }
 
 func renderSelectorExpr(ctx *engine.RenderContext, node ast.Node) error {
-	expr := node.(*ast.SelectorExpr)
+	expr := node.(*goast.SelectorExpr)
 	if err := engine.EngineRenderExpr(ctx, expr.Base); err != nil {
 		return err
 	}
@@ -25,7 +26,7 @@ func renderSelectorExpr(ctx *engine.RenderContext, node ast.Node) error {
 }
 
 func renderIndexExpr(ctx *engine.RenderContext, node ast.Node) error {
-	expr := node.(*ast.IndexExpr)
+	expr := node.(*goast.IndexExpr)
 	if err := engine.EngineRenderExpr(ctx, expr.Base); err != nil {
 		return err
 	}
@@ -38,13 +39,13 @@ func renderIndexExpr(ctx *engine.RenderContext, node ast.Node) error {
 }
 
 func renderAddressOfExpr(ctx *engine.RenderContext, node ast.Node) error {
-	expr := node.(*ast.AddressOfExpr)
+	expr := node.(*goast.AddressOfExpr)
 	emit.EmitterWrite(ctx.Emitter, "&")
 	return engine.EngineRenderExpr(ctx, expr.Operand)
 }
 
 func renderCallExpr(ctx *engine.RenderContext, node ast.Node) error {
-	expr := node.(*ast.CallExpr)
+	expr := node.(*goast.CallExpr)
 	if err := engine.EngineRenderExpr(ctx, expr.Callee); err != nil {
 		return err
 	}
@@ -62,32 +63,32 @@ func renderCallExpr(ctx *engine.RenderContext, node ast.Node) error {
 }
 
 func renderStringLitExpr(ctx *engine.RenderContext, node ast.Node) error {
-	expr := node.(*ast.StringLitExpr)
+	expr := node.(*goast.StringLitExpr)
 	emit.EmitterWrite(ctx.Emitter, strconv.Quote(expr.Value))
 	return nil
 }
 
 func renderIntLitExpr(ctx *engine.RenderContext, node ast.Node) error {
-	expr := node.(*ast.IntLitExpr)
+	expr := node.(*goast.IntLitExpr)
 	emit.EmitterWriteFormatted(ctx.Emitter, "%d", expr.Value)
 	return nil
 }
 
 func renderNilLitExpr(ctx *engine.RenderContext, node ast.Node) error {
-	_ = node.(*ast.NilLitExpr)
+	_ = node.(*goast.NilLitExpr)
 	emit.EmitterWrite(ctx.Emitter, "nil")
 	return nil
 }
 
 func renderBinaryExpr(ctx *engine.RenderContext, node ast.Node) error {
-	expr := node.(*ast.BinaryExpr)
+	expr := node.(*goast.BinaryExpr)
 	if err := engine.EngineRenderExpr(ctx, expr.Left); err != nil {
 		return err
 	}
 	switch expr.Op {
-	case ast.BinaryOpEq:
+	case goast.BinaryOpEq:
 		emit.EmitterWrite(ctx.Emitter, " == ")
-	case ast.BinaryOpNe:
+	case goast.BinaryOpNe:
 		emit.EmitterWrite(ctx.Emitter, " != ")
 	default:
 		return fmt.Errorf("goengine: unknown binary op %d", expr.Op)
@@ -96,7 +97,7 @@ func renderBinaryExpr(ctx *engine.RenderContext, node ast.Node) error {
 }
 
 func renderCompositeLitExpr(ctx *engine.RenderContext, node ast.Node) error {
-	expr := node.(*ast.CompositeLitExpr)
+	expr := node.(*goast.CompositeLitExpr)
 	if expr.IsSlice {
 		emit.EmitterWriteFormatted(ctx.Emitter, "[]%s{", expr.TypeName)
 		emit.EmitterLineBreak(ctx.Emitter)

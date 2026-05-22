@@ -8,10 +8,10 @@ import (
 )
 
 func renderBlockStmtNode(ctx *engine.RenderContext, node ast.Node) error {
-	return renderBlockStmt(ctx, node.(ast.BlockStmt))
+	return renderBlockStmt(ctx, node.(goast.BlockStmt))
 }
 
-func renderBlockStmt(ctx *engine.RenderContext, block ast.BlockStmt) error {
+func renderBlockStmt(ctx *engine.RenderContext, block goast.BlockStmt) error {
 	for _, leading := range block.Leading {
 		if err := engine.EngineRenderNode(ctx, leading); err != nil {
 			return err
@@ -44,7 +44,7 @@ func renderVarDeclStmt(ctx *engine.RenderContext, node ast.Node) error {
 }
 
 func renderShortVarDeclStmt(ctx *engine.RenderContext, node ast.Node) error {
-	stmt := node.(ast.ShortVarDeclStmt)
+	stmt := node.(goast.ShortVarDeclStmt)
 	emit.EmitterWriteFormatted(ctx.Emitter, "%s := ", stmt.Name)
 	if err := engine.EngineRenderExpr(ctx, stmt.Rhs); err != nil {
 		return err
@@ -54,7 +54,7 @@ func renderShortVarDeclStmt(ctx *engine.RenderContext, node ast.Node) error {
 }
 
 func renderAssignStmt(ctx *engine.RenderContext, node ast.Node) error {
-	stmt := node.(ast.AssignStmt)
+	stmt := node.(goast.AssignStmt)
 	emit.EmitterWriteFormatted(ctx.Emitter, "%s = ", stmt.Name)
 	if err := engine.EngineRenderExpr(ctx, stmt.Rhs); err != nil {
 		return err
@@ -64,16 +64,16 @@ func renderAssignStmt(ctx *engine.RenderContext, node ast.Node) error {
 }
 
 func renderRangeLoopStmt(ctx *engine.RenderContext, node ast.Node) error {
-	stmt := node.(ast.RangeLoopStmt)
+	stmt := node.(goast.RangeLoopStmt)
 	emit.EmitterWriteFormatted(ctx.Emitter, "for i := range %s {", stmt.Collection)
 	emit.EmitterLineBreak(ctx.Emitter)
 	emit.EmitterIndent(ctx.Emitter)
 
-	elementRhs := ast.ExprIndex(
-		ast.ExprIdent(stmt.Collection),
-		ast.ExprIdent("i"),
+	elementRhs := goast.ExprIndex(
+		goast.ExprIdent(stmt.Collection),
+		goast.ExprIdent("i"),
 	)
-	if err := engine.EngineRenderStmt(ctx, ast.StmtShortVarDecl(stmt.ElementName, elementRhs)); err != nil {
+	if err := engine.EngineRenderStmt(ctx, goast.StmtShortVarDecl(stmt.ElementName, elementRhs)); err != nil {
 		return err
 	}
 	emit.EmitterLineBreak(ctx.Emitter)
@@ -88,10 +88,10 @@ func renderRangeLoopStmt(ctx *engine.RenderContext, node ast.Node) error {
 }
 
 func renderIfStmt(ctx *engine.RenderContext, node ast.Node) error {
-	stmt := node.(ast.IfStmt)
+	stmt := node.(goast.IfStmt)
 	emit.EmitterWrite(ctx.Emitter, "if ")
 	if stmt.Init != nil {
-		if initDecl, ok := stmt.Init.(ast.ShortVarDeclStmt); ok {
+		if initDecl, ok := stmt.Init.(goast.ShortVarDeclStmt); ok {
 			emit.EmitterWriteFormatted(ctx.Emitter, "%s := ", initDecl.Name)
 			if err := engine.EngineRenderExpr(ctx, initDecl.Rhs); err != nil {
 				return err
@@ -119,7 +119,7 @@ func renderIfStmt(ctx *engine.RenderContext, node ast.Node) error {
 }
 
 func renderReturnStmt(ctx *engine.RenderContext, node ast.Node) error {
-	stmt := node.(ast.ReturnStmt)
+	stmt := node.(goast.ReturnStmt)
 	emit.EmitterWrite(ctx.Emitter, "return ")
 	if err := engine.EngineRenderExpr(ctx, stmt.Value); err != nil {
 		return err
@@ -129,7 +129,7 @@ func renderReturnStmt(ctx *engine.RenderContext, node ast.Node) error {
 }
 
 func renderExprStmt(ctx *engine.RenderContext, node ast.Node) error {
-	stmt := node.(ast.ExprStmt)
+	stmt := node.(goast.ExprStmt)
 	if err := engine.EngineRenderExpr(ctx, stmt.Expr); err != nil {
 		return err
 	}

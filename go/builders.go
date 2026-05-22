@@ -7,9 +7,34 @@ import (
 )
 
 /*
+Kind identifies a Go AST node variant. See internal/goast for all kind constants.
+*/
+type Kind = goast.Kind
+
+/*
+File is the root node for a generated Go source file.
+*/
+type File = goast.File
+
+/*
 GoDocComment is a Go documentation block attached to a declaration or field.
 */
 type GoDocComment = goast.GoDocComment
+
+/*
+BlankLine inserts vertical spacing in generated Go output.
+*/
+type BlankLine = goast.BlankLine
+
+/*
+LineComment is a single-line // comment.
+*/
+type LineComment = goast.LineComment
+
+/*
+BlockComment is a multi-line // comment block.
+*/
+type BlockComment = goast.BlockComment
 
 /*
 PackageDecl declares the package clause of a generated Go file.
@@ -27,6 +52,21 @@ TypeStructDecl declares a Go struct type with fields.
 type TypeStructDecl = goast.TypeStructDecl
 
 /*
+TypeDefinedDecl declares a Go defined type or type alias.
+*/
+type TypeDefinedDecl = goast.TypeDefinedDecl
+
+/*
+ConstSpec is one entry in a Go const block.
+*/
+type ConstSpec = goast.ConstSpec
+
+/*
+ConstGroupDecl declares a parenthesized Go const block.
+*/
+type ConstGroupDecl = goast.ConstGroupDecl
+
+/*
 StructFieldDecl describes one field in a Go struct.
 */
 type StructFieldDecl = goast.StructFieldDecl
@@ -42,6 +82,11 @@ FuncDecl declares a Go function with signature and body block.
 type FuncDecl = goast.FuncDecl
 
 /*
+BlockStmt groups statements with optional leading layout nodes.
+*/
+type BlockStmt = goast.BlockStmt
+
+/*
 VarDeclStmt declares a variable with Go var syntax.
 */
 type VarDeclStmt = goast.VarDeclStmt
@@ -49,27 +94,92 @@ type VarDeclStmt = goast.VarDeclStmt
 /*
 ShortVarDeclStmt declares and initializes a variable with Go := syntax.
 */
-type ShortVarDeclStmt = ast.ShortVarDeclStmt
+type ShortVarDeclStmt = goast.ShortVarDeclStmt
+
+/*
+AssignStmt assigns an expression to a name with = syntax.
+*/
+type AssignStmt = goast.AssignStmt
 
 /*
 RangeLoopStmt iterates a Go slice with for i := range collection.
 */
-type RangeLoopStmt = ast.RangeLoopStmt
+type RangeLoopStmt = goast.RangeLoopStmt
+
+/*
+IfStmt conditionally executes a body, optionally with an init statement.
+*/
+type IfStmt = goast.IfStmt
+
+/*
+ReturnStmt returns a value from the enclosing function.
+*/
+type ReturnStmt = goast.ReturnStmt
+
+/*
+ExprStmt executes an expression for side effects.
+*/
+type ExprStmt = goast.ExprStmt
+
+/*
+IdentExpr references an identifier by name.
+*/
+type IdentExpr = goast.IdentExpr
+
+/*
+SelectorExpr selects a field or method on a base expression.
+*/
+type SelectorExpr = goast.SelectorExpr
+
+/*
+IndexExpr indexes a base expression.
+*/
+type IndexExpr = goast.IndexExpr
+
+/*
+AddressOfExpr takes the address of its operand.
+*/
+type AddressOfExpr = goast.AddressOfExpr
+
+/*
+CallExpr invokes a callee with arguments.
+*/
+type CallExpr = goast.CallExpr
+
+/*
+StringLitExpr is a string literal.
+*/
+type StringLitExpr = goast.StringLitExpr
+
+/*
+IntLitExpr is an integer literal.
+*/
+type IntLitExpr = goast.IntLitExpr
 
 /*
 NilLitExpr is the Go nil literal.
 */
-type NilLitExpr = ast.NilLitExpr
+type NilLitExpr = goast.NilLitExpr
+
+/*
+BinaryExpr combines two expressions with a binary operator.
+*/
+type BinaryExpr = goast.BinaryExpr
+
+/*
+BinaryOp identifies a binary operator.
+*/
+type BinaryOp = goast.BinaryOp
 
 /*
 FieldInit pairs a field name with an initializing expression in a Go composite literal.
 */
-type FieldInit = ast.FieldInit
+type FieldInit = goast.FieldInit
 
 /*
 CompositeLitExpr is a Go struct or slice composite literal.
 */
-type CompositeLitExpr = ast.CompositeLitExpr
+type CompositeLitExpr = goast.CompositeLitExpr
 
 /*
 TypeExpr describes a Go type in generated code.
@@ -87,168 +197,180 @@ ParamType pairs a parameter name with its Go type.
 type ParamType = goast.ParamType
 
 const (
-	/* NodeKindGoDocComment identifies a Go block documentation comment node. */
-	NodeKindGoDocComment = ast.NodeKindGoDocComment
-	/* NodeKindPackageDecl identifies a Go package declaration. */
-	NodeKindPackageDecl = ast.NodeKindPackageDecl
-	/* NodeKindImportBlock identifies a Go import block. */
-	NodeKindImportBlock = ast.NodeKindImportBlock
-	/* NodeKindTypeStructDecl identifies a Go struct type declaration. */
-	NodeKindTypeStructDecl = ast.NodeKindTypeStructDecl
-	/* NodeKindFuncDecl identifies a Go function declaration. */
-	NodeKindFuncDecl = ast.NodeKindFuncDecl
-	/* NodeKindVarDeclStmt identifies a Go var declaration statement. */
-	NodeKindVarDeclStmt = ast.NodeKindVarDeclStmt
-	/* NodeKindShortVarDeclStmt identifies a Go := declaration statement. */
-	NodeKindShortVarDeclStmt = ast.NodeKindShortVarDeclStmt
-	/* NodeKindRangeLoopStmt identifies a Go for-range loop statement. */
-	NodeKindRangeLoopStmt = ast.NodeKindRangeLoopStmt
-	/* NodeKindNilLitExpr identifies a Go nil literal expression. */
-	NodeKindNilLitExpr = ast.NodeKindNilLitExpr
-	/* NodeKindCompositeLitExpr identifies a Go composite literal expression. */
-	NodeKindCompositeLitExpr = ast.NodeKindCompositeLitExpr
-
-	/* TypeExprKindNamed identifies a named Go type. */
-	TypeExprKindNamed = goast.TypeExprKindNamed
-	/* TypeExprKindPointer identifies a Go pointer type. */
-	TypeExprKindPointer = goast.TypeExprKindPointer
-	/* TypeExprKindSlice identifies a Go slice type. */
-	TypeExprKindSlice = goast.TypeExprKindSlice
-	/* TypeExprKindFunc identifies a Go function type. */
-	TypeExprKindFunc = goast.TypeExprKindFunc
+	KindBlankLine        = goast.KindBlankLine
+	KindLineComment      = goast.KindLineComment
+	KindBlockComment     = goast.KindBlockComment
+	KindGoDocComment     = goast.KindGoDocComment
+	KindFile             = goast.KindFile
+	KindPackageDecl      = goast.KindPackageDecl
+	KindImportBlock      = goast.KindImportBlock
+	KindTypeStructDecl   = goast.KindTypeStructDecl
+	KindTypeDefinedDecl  = goast.KindTypeDefinedDecl
+	KindConstGroupDecl   = goast.KindConstGroupDecl
+	KindFuncDecl         = goast.KindFuncDecl
+	KindBlockStmt        = goast.KindBlockStmt
+	KindVarDeclStmt      = goast.KindVarDeclStmt
+	KindShortVarDeclStmt = goast.KindShortVarDeclStmt
+	KindAssignStmt       = goast.KindAssignStmt
+	KindRangeLoopStmt    = goast.KindRangeLoopStmt
+	KindIfStmt           = goast.KindIfStmt
+	KindReturnStmt       = goast.KindReturnStmt
+	KindExprStmt         = goast.KindExprStmt
+	KindIdentExpr        = goast.KindIdentExpr
+	KindSelectorExpr     = goast.KindSelectorExpr
+	KindIndexExpr        = goast.KindIndexExpr
+	KindAddressOfExpr    = goast.KindAddressOfExpr
+	KindCallExpr         = goast.KindCallExpr
+	KindStringLitExpr    = goast.KindStringLitExpr
+	KindIntLitExpr       = goast.KindIntLitExpr
+	KindNilLitExpr       = goast.KindNilLitExpr
+	KindBinaryExpr       = goast.KindBinaryExpr
+	KindCompositeLitExpr = goast.KindCompositeLitExpr
+	BinaryOpEq           = goast.BinaryOpEq
+	BinaryOpNe           = goast.BinaryOpNe
+	TypeExprKindNamed    = goast.TypeExprKindNamed
+	TypeExprKindPointer  = goast.TypeExprKindPointer
+	TypeExprKindSlice    = goast.TypeExprKindSlice
+	TypeExprKindFunc     = goast.TypeExprKindFunc
 )
 
-/*
-FileElementFrom wraps any node as a FileElement.
-
-[Returns]
-A FileElement suitable for DeclFile.
-*/
 func FileElementFrom(node codegen.Node) codegen.FileElement {
 	return codegen.FileElementFrom(node)
 }
 
-/*
-DeclFile constructs a file root node from ordered top-level elements.
-*/
-func DeclFile(elements ...codegen.FileElement) codegen.File {
-	return codegen.DeclFile(elements...)
+func DeclFile(elements ...codegen.FileElement) File {
+	return goast.DeclFile(elements...)
 }
 
-/*
-TypeExprFromGoTypeString parses a Go type spelling into a TypeExpr tree.
-
-[Parameters]
-typeString — type identifier such as "*uint32" or "[]commandMapping".
-
-[Returns]
-The parsed TypeExpr, or an error when typeString is empty.
-*/
 func TypeExprFromGoTypeString(typeString string) (TypeExpr, error) {
 	return goast.TypeExprFromGoTypeString(typeString)
 }
 
-/*
-DeclPackage constructs a Go package declaration node.
-*/
 func DeclPackage(name string) PackageDecl {
 	return goast.DeclPackage(name)
 }
 
-/*
-DeclImportBlock constructs a parenthesized Go import block.
-*/
 func DeclImportBlock(paths ...string) ImportBlock {
 	return goast.DeclImportBlock(paths...)
 }
 
-/*
-DeclTypeStruct constructs a Go struct type declaration with fields.
-*/
 func DeclTypeStruct(name string, fields []StructFieldDecl) TypeStructDecl {
 	return goast.DeclTypeStruct(name, fields)
 }
 
-/*
-StructFieldType declares a struct field with a plain Go type.
-*/
+func DeclTypeDefined(name string, underlying TypeExpr, isAlias bool, doc string, leading ...codegen.Node) TypeDefinedDecl {
+	return goast.DeclTypeDefined(name, underlying, isAlias, doc, leading...)
+}
+
+func DeclConstGroup(specs []ConstSpec, doc string, leading ...codegen.Node) ConstGroupDecl {
+	return goast.DeclConstGroup(specs, doc, leading...)
+}
+
+func ConstSpecNew(name string, typ *TypeExpr, value string, doc string) ConstSpec {
+	return goast.ConstSpecNew(name, typ, value, doc)
+}
+
+func TypeExprNamedPtr(name string) *TypeExpr {
+	typ := TypeExprNamed(name)
+	return &typ
+}
+
 func StructFieldType(name string, typ TypeExpr) StructFieldDecl {
 	return goast.StructFieldType(name, typ)
 }
 
-/*
-StructFieldFunc declares a struct field with an embedded Go function type.
-*/
 func StructFieldFunc(name string, sig FuncTypeSig) StructFieldDecl {
 	return goast.StructFieldFunc(name, sig)
 }
 
-/*
-StructFieldFuncDoc declares a documented struct field with an embedded Go function type.
-*/
 func StructFieldFuncDoc(name string, sig FuncTypeSig, doc string, leading ...codegen.Node) StructFieldDecl {
 	return goast.StructFieldFuncDoc(name, sig, doc, leading...)
 }
 
-/*
-TypeExprNamed constructs a named Go type identifier.
-*/
 func TypeExprNamed(name string) TypeExpr {
 	return goast.TypeExprNamed(name)
 }
 
-/*
-TypeExprPointer constructs a Go pointer type expression.
-*/
 func TypeExprPointer(elem TypeExpr) TypeExpr {
 	return goast.TypeExprPointer(elem)
 }
 
-/*
-DeclFunc constructs a Go function declaration with body.
-*/
-func DeclFunc(name string, params []ParamType, returns []TypeExpr, body codegen.BlockStmt) FuncDecl {
+func DeclFunc(name string, params []ParamType, returns []TypeExpr, body BlockStmt) FuncDecl {
 	return goast.DeclFunc(name, params, returns, body)
 }
 
-/*
-ExprNil constructs a Go nil literal expression.
-*/
+func ExprIdent(name string) *IdentExpr {
+	return goast.ExprIdent(name)
+}
+
+func ExprSelector(base ast.Expr, name string) *SelectorExpr {
+	return goast.ExprSelector(base, name)
+}
+
+func ExprIndex(base ast.Expr, index ast.Expr) *IndexExpr {
+	return goast.ExprIndex(base, index)
+}
+
+func ExprAddressOf(operand ast.Expr) *AddressOfExpr {
+	return goast.ExprAddressOf(operand)
+}
+
+func ExprCall(callee ast.Expr, args ...ast.Expr) *CallExpr {
+	return goast.ExprCall(callee, args...)
+}
+
+func ExprStringLit(value string) *StringLitExpr {
+	return goast.ExprStringLit(value)
+}
+
+func ExprIntLit(value int64) *IntLitExpr {
+	return goast.ExprIntLit(value)
+}
+
 func ExprNil() *NilLitExpr {
-	return ast.ExprNil()
+	return goast.ExprNil()
 }
 
-/*
-ExprCompositeLit constructs a Go struct composite literal.
-*/
+func ExprBinary(op BinaryOp, left ast.Expr, right ast.Expr) *BinaryExpr {
+	return goast.ExprBinary(op, left, right)
+}
+
 func ExprCompositeLit(typeName string, fields []FieldInit) *CompositeLitExpr {
-	return ast.ExprCompositeLit(typeName, fields)
+	return goast.ExprCompositeLit(typeName, fields)
 }
 
-/*
-ExprSliceCompositeLit constructs a Go slice of composite literals.
-*/
-func ExprSliceCompositeLit(elementTypeName string, elements []codegen.Expr) *CompositeLitExpr {
-	return ast.ExprSliceCompositeLit(elementTypeName, elements)
+func ExprSliceCompositeLit(elementTypeName string, elements []ast.Expr) *CompositeLitExpr {
+	return goast.ExprSliceCompositeLit(elementTypeName, elements)
 }
 
-/*
-StmtVarDecl constructs a Go var declaration statement.
-*/
+func StmtBlock(stmts ...ast.Stmt) BlockStmt {
+	return goast.StmtBlock(stmts...)
+}
+
 func StmtVarDecl(name string, typ TypeExpr, isSlice bool) VarDeclStmt {
 	return goast.StmtVarDecl(name, typ, isSlice)
 }
 
-/*
-StmtShortVarDecl constructs a Go short variable declaration with :=.
-*/
-func StmtShortVarDecl(name string, rhs codegen.Expr) ShortVarDeclStmt {
-	return ast.StmtShortVarDecl(name, rhs)
+func StmtShortVarDecl(name string, rhs ast.Expr) ShortVarDeclStmt {
+	return goast.StmtShortVarDecl(name, rhs)
 }
 
-/*
-StmtRangeLoop constructs a Go for i := range collection loop.
-*/
-func StmtRangeLoop(collection string, elementName string, body codegen.BlockStmt) RangeLoopStmt {
-	return ast.StmtRangeLoop(collection, elementName, body)
+func StmtRangeLoop(collection string, elementName string, body BlockStmt) RangeLoopStmt {
+	return goast.StmtRangeLoop(collection, elementName, body)
+}
+
+func StmtIf(condition ast.Expr, body BlockStmt) IfStmt {
+	return goast.StmtIf(condition, body)
+}
+
+func StmtIfWithInit(init ast.Stmt, condition ast.Expr, body BlockStmt) IfStmt {
+	return goast.StmtIfWithInit(init, condition, body)
+}
+
+func StmtReturn(value ast.Expr) ReturnStmt {
+	return goast.StmtReturn(value)
+}
+
+func StmtExpr(expr ast.Expr) ExprStmt {
+	return goast.StmtExpr(expr)
 }

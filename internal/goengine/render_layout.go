@@ -8,19 +8,19 @@ import (
 )
 
 func renderBlankLine(ctx *engine.RenderContext, node ast.Node) error {
-	_ = node.(ast.BlankLine)
+	_ = node.(goast.BlankLine)
 	emit.EmitterLineBreak(ctx.Emitter)
 	return nil
 }
 
 func renderLineComment(ctx *engine.RenderContext, node ast.Node) error {
-	comment := node.(ast.LineComment)
+	comment := node.(goast.LineComment)
 	emit.EmitterWriteLineFormatted(ctx.Emitter, "// %s", comment.Text)
 	return nil
 }
 
 func renderBlockComment(ctx *engine.RenderContext, node ast.Node) error {
-	comment := node.(ast.BlockComment)
+	comment := node.(goast.BlockComment)
 	for _, line := range comment.Lines {
 		emit.EmitterWriteLineFormatted(ctx.Emitter, "// %s", line)
 	}

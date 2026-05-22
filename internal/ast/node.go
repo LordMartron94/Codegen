@@ -1,75 +1,25 @@
 package ast
 
 /*
-NodeKind identifies an AST node variant for engine registration and dispatch.
+NodeKind is an opaque discriminator assigned by a language frontend.
 
 [Context]
-Kinds are grouped by family: layout, declaration, statement, and expression nodes share one flat enumeration so a single registry can render any subtree. Kinds from NodeKindGoDocComment through NodeKindFuncDecl and NodeKindVarDeclStmt are Go-backend shapes (structs live in internal/goast); expression and neutral layout kinds are language-agnostic.
+The core engine indexes renderers by int(kind). Each frontend owns its own kind numbering via iota or explicit constants in its AST package. The core does not declare any predefined kind values.
 */
-type NodeKind uint16
-
-const (
-	// Layout nodes.
-	NodeKindBlankLine NodeKind = iota
-	NodeKindLineComment
-	NodeKindBlockComment
-	NodeKindGoDocComment
-
-	// File and declaration nodes.
-	NodeKindFile
-	NodeKindPackageDecl
-	NodeKindImportBlock
-	NodeKindTypeStructDecl
-	NodeKindFuncDecl
-
-	// Statement nodes.
-	NodeKindBlockStmt
-	NodeKindVarDeclStmt
-	NodeKindShortVarDeclStmt
-	NodeKindAssignStmt
-	NodeKindRangeLoopStmt
-	NodeKindIfStmt
-	NodeKindReturnStmt
-	NodeKindExprStmt
-
-	// Expression nodes.
-	NodeKindIdentExpr
-	NodeKindSelectorExpr
-	NodeKindIndexExpr
-	NodeKindAddressOfExpr
-	NodeKindCallExpr
-	NodeKindStringLitExpr
-	NodeKindIntLitExpr
-	NodeKindNilLitExpr
-	NodeKindBinaryExpr
-	NodeKindCompositeLitExpr
-
-	_nodeKindCount
-)
+type NodeKind uint32
 
 /*
-NodeKindCount is the exclusive upper bound for NodeKind values used to size engine registries.
+Node is the root interface for every AST value rendered by a codegen engine.
 
 [Context]
-EngineCreate pre-allocates a renderer slice of this length for O(1) index dispatch without map hashing.
-*/
-const NodeKindCount = _nodeKindCount
-
-/*
-Node is the root interface for all AST nodes rendered by a codegen engine.
-
-[Context]
-Concrete node types are plain structs with a NodeKind discriminator; renderers switch on NodeKind via the engine registry.
+Concrete node types live in language frontends (for example internal/goast). Each implements NodeKind() with a frontend-specific kind value.
 */
 type Node interface {
 	NodeKind() NodeKind
 }
 
 /*
-Expr is an expression node producing a value in the target language.
-
-[Context]
-All value positions in statements and composite literals use Expr implementations.
+Expr is an expression node that produces a value in the target language.
 */
 type Expr interface {
 	Node
@@ -78,9 +28,6 @@ type Expr interface {
 
 /*
 Stmt is a statement node executed inside function bodies and blocks.
-
-[Context]
-BlockStmt holds Stmt children; some Stmt nodes embed Expr for conditions and right-hand sides. Go-specific stmts such as VarDeclStmt live in internal/goast and implement this interface.
 */
 type Stmt interface {
 	Node
@@ -88,15 +35,24 @@ type Stmt interface {
 }
 
 /*
-FileElement wraps a top-level file child (layout or declaration).
+FileElement wraps one top-level file child.
 
 [Context]
-Files use an ordered element list so comments and blank lines can appear between declarations.
+Source file roots in language frontends hold ordered FileElement slices so layout and declarations can interleave.
 */
 type FileElement struct {
 	Node Node
 }
 
+/*
+FileElementFrom wraps any node as a FileElement.
+
+[Parameters]
+node — layout or declaration node from a language frontend.
+
+[Returns]
+A FileElement containing node.
+*/
 func FileElementFrom(node Node) FileElement {
 	return FileElement{Node: node}
 }

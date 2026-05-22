@@ -3,16 +3,50 @@ package goast
 import "codegen/internal/ast"
 
 /*
-GoDocComment is a Go documentation block attached to a declaration or field.
+BlankLine inserts vertical spacing in generated Go output.
+*/
+type BlankLine struct{}
 
-[Context]
-Go engines render Lines as a block documentation comment; used for generated API documentation on struct fields and declarations.
+func (BlankLine) NodeKind() ast.NodeKind { return KindBlankLine }
+
+/*
+LineComment is a single-line // comment.
+*/
+type LineComment struct {
+	Text string
+}
+
+func (LineComment) NodeKind() ast.NodeKind { return KindLineComment }
+
+/*
+BlockComment is a multi-line // comment block.
+*/
+type BlockComment struct {
+	Lines []string
+}
+
+func (BlockComment) NodeKind() ast.NodeKind { return KindBlockComment }
+
+/*
+GoDocComment is a Go documentation block attached to a declaration or field.
 */
 type GoDocComment struct {
 	Lines []string
 }
 
-func (GoDocComment) NodeKind() ast.NodeKind { return ast.NodeKindGoDocComment }
+func (GoDocComment) NodeKind() ast.NodeKind { return KindGoDocComment }
+
+func LayoutBlankLineNew() BlankLine {
+	return BlankLine{}
+}
+
+func LayoutLineCommentNew(text string) LineComment {
+	return LineComment{Text: text}
+}
+
+func LayoutBlockCommentNew(lines ...string) BlockComment {
+	return BlockComment{Lines: lines}
+}
 
 func LayoutGoDocCommentNew(lines ...string) GoDocComment {
 	return GoDocComment{Lines: lines}

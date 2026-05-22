@@ -8,7 +8,7 @@ import (
 )
 
 func renderFile(ctx *engine.RenderContext, node ast.Node) error {
-	file := node.(ast.File)
+	file := node.(goast.File)
 	for _, element := range file.Elements {
 		if err := engine.EngineRenderNode(ctx, element.Node); err != nil {
 			return err
@@ -66,6 +66,70 @@ func renderTypeStructDecl(ctx *engine.RenderContext, node ast.Node) error {
 	emit.EmitterDedent(ctx.Emitter)
 	emit.EmitterWriteLine(ctx.Emitter, "}")
 	return nil
+}
+
+func renderTypeDefinedDecl(ctx *engine.RenderContext, node ast.Node) error {
+	decl := node.(goast.TypeDefinedDecl)
+	for _, leading := range decl.Leading {
+		if err := engine.EngineRenderNode(ctx, leading); err != nil {
+			return err
+		}
+	}
+	if decl.Doc != "" {
+		if err := engine.EngineRenderNode(ctx, goast.LayoutGoDocCommentFromText(decl.Doc)); err != nil {
+			return err
+		}
+	}
+	if decl.IsAlias {
+		emit.EmitterWriteFormatted(ctx.Emitter, "type %s = ", decl.Name)
+	} else {
+		emit.EmitterWriteFormatted(ctx.Emitter, "type %s ", decl.Name)
+	}
+	if err := GoRenderTypeExpr(ctx, decl.Underlying); err != nil {
+		return err
+	}
+	emit.EmitterLineBreak(ctx.Emitter)
+	return nil
+}
+
+func renderConstGroupDecl(ctx *engine.RenderContext, node ast.Node) error {
+	decl := node.(goast.ConstGroupDecl)
+	for _, leading := range decl.Leading {
+		if err := engine.EngineRenderNode(ctx, leading); err != nil {
+			return err
+		}
+	}
+	if decl.Doc != "" {
+		if err := engine.EngineRenderNode(ctx, goast.LayoutGoDocCommentFromText(decl.Doc)); err != nil {
+			return err
+		}
+	}
+	emit.EmitterWriteLine(ctx.Emitter, "const (")
+	emit.EmitterIndent(ctx.Emitter)
+	for _, spec := range decl.Specs {
+		if spec.Doc != "" {
+			for _, line := range goDocLinesFromText(spec.Doc) {
+				emit.EmitterWriteLineFormatted(ctx.Emitter, "// %s", line)
+			}
+		}
+		emit.EmitterWriteFormatted(ctx.Emitter, "%s", spec.Name)
+		if spec.Type != nil {
+			emit.EmitterWrite(ctx.Emitter, " ")
+			if err := GoRenderTypeExpr(ctx, *spec.Type); err != nil {
+				return err
+			}
+		}
+		emit.EmitterWriteFormatted(ctx.Emitter, " = %s", spec.Value)
+		emit.EmitterLineBreak(ctx.Emitter)
+	}
+	emit.EmitterDedent(ctx.Emitter)
+	emit.EmitterWriteLine(ctx.Emitter, ")")
+	return nil
+}
+
+func goDocLinesFromText(text string) []string {
+	comment := goast.LayoutGoDocCommentFromText(text)
+	return comment.Lines
 }
 
 func renderFuncDecl(ctx *engine.RenderContext, node ast.Node) error {

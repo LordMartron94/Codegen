@@ -37,17 +37,17 @@ type Engine struct {
 }
 
 /*
-EngineCreate constructs an engine with a pre-allocated renderer slice sized to ast.NodeKindCount.
+EngineCreate constructs an engine with an empty renderer registry.
 
 [Returns]
 An engine ready for EngineRegister calls. Slots are nil until registered.
 
 [Context]
-Pre-allocation avoids map hashing and bucket traversal on every EngineRenderNode call.
+Language frontends register only the node kinds they define. The registry slice grows on demand when a kind index exceeds the current length.
 */
 func EngineCreate() *Engine {
 	return &Engine{
-		registry: make([]RenderFn, int(ast.NodeKindCount)),
+		registry: make([]RenderFn, 0),
 	}
 }
 
@@ -56,11 +56,11 @@ EngineRegister binds a renderer to a node kind index.
 
 [Parameters]
 engine — target engine.
-kind — node discriminator; must be less than NodeKindCount.
+kind — node discriminator assigned by the language frontend.
 fn — renderer invoked when EngineRenderNode encounters kind.
 
 [Context]
-Grows the registry slice if kind exceeds the current length (safety when NodeKindCount lags enum growth).
+Grows the registry slice if kind exceeds the current length.
 */
 func EngineRegister(engine *Engine, kind ast.NodeKind, fn RenderFn) {
 	kindIdx := int(kind)

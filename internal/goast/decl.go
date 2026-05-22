@@ -12,7 +12,7 @@ type PackageDecl struct {
 	Name string
 }
 
-func (PackageDecl) NodeKind() ast.NodeKind { return ast.NodeKindPackageDecl }
+func (PackageDecl) NodeKind() ast.NodeKind { return KindPackageDecl }
 
 /*
 ImportBlock groups import paths.
@@ -24,7 +24,7 @@ type ImportBlock struct {
 	Paths []string
 }
 
-func (ImportBlock) NodeKind() ast.NodeKind { return ast.NodeKindImportBlock }
+func (ImportBlock) NodeKind() ast.NodeKind { return KindImportBlock }
 
 /*
 StructFieldDecl describes one field in a struct type.
@@ -62,7 +62,50 @@ type TypeStructDecl struct {
 	Fields []StructFieldDecl
 }
 
-func (TypeStructDecl) NodeKind() ast.NodeKind { return ast.NodeKindTypeStructDecl }
+func (TypeStructDecl) NodeKind() ast.NodeKind { return KindTypeStructDecl }
+
+/*
+TypeDefinedDecl declares a defined type or type alias in Go.
+
+[Context]
+When IsAlias is false, renders as type Name Underlying. When IsAlias is true, renders as type Name = Underlying.
+*/
+type TypeDefinedDecl struct {
+	Leading    []ast.Node
+	Doc        string
+	Name       string
+	Underlying TypeExpr
+	IsAlias    bool
+}
+
+func (TypeDefinedDecl) NodeKind() ast.NodeKind { return KindTypeDefinedDecl }
+
+/*
+ConstSpec is one entry in a parenthesized const block.
+
+[Context]
+Value is emitted verbatim as the right-hand literal from the registry (for example 0, -1, 0x7FFFFFFF).
+*/
+type ConstSpec struct {
+	Doc   string
+	Name  string
+	Type  *TypeExpr
+	Value string
+}
+
+/*
+ConstGroupDecl declares a parenthesized const block.
+
+[Context]
+Renders as const ( ... ) in Go. Each spec may include an optional typed name and doc as line comments.
+*/
+type ConstGroupDecl struct {
+	Leading []ast.Node
+	Doc     string
+	Specs   []ConstSpec
+}
+
+func (ConstGroupDecl) NodeKind() ast.NodeKind { return KindConstGroupDecl }
 
 /*
 FuncDecl declares a function with signature and body.
@@ -74,10 +117,10 @@ type FuncDecl struct {
 	Name    string
 	Params  []ParamType
 	Returns []TypeExpr
-	Body    ast.BlockStmt
+	Body    BlockStmt
 }
 
-func (FuncDecl) NodeKind() ast.NodeKind { return ast.NodeKindFuncDecl }
+func (FuncDecl) NodeKind() ast.NodeKind { return KindFuncDecl }
 
 func DeclPackage(name string) PackageDecl {
 	return PackageDecl{Name: name}
@@ -91,7 +134,7 @@ func DeclTypeStruct(name string, fields []StructFieldDecl) TypeStructDecl {
 	return TypeStructDecl{Name: name, Fields: fields}
 }
 
-func DeclFunc(name string, params []ParamType, returns []TypeExpr, body ast.BlockStmt) FuncDecl {
+func DeclFunc(name string, params []ParamType, returns []TypeExpr, body BlockStmt) FuncDecl {
 	return FuncDecl{Name: name, Params: params, Returns: returns, Body: body}
 }
 
@@ -109,4 +152,16 @@ func StructFieldFuncDoc(name string, sig FuncTypeSig, doc string, leading ...ast
 
 func StructFieldTypeDoc(name string, typ TypeExpr, doc string, leading ...ast.Node) StructFieldDecl {
 	return StructFieldDecl{Name: name, Type: typ, Doc: doc, Leading: leading}
+}
+
+func DeclTypeDefined(name string, underlying TypeExpr, isAlias bool, doc string, leading ...ast.Node) TypeDefinedDecl {
+	return TypeDefinedDecl{Name: name, Underlying: underlying, IsAlias: isAlias, Doc: doc, Leading: leading}
+}
+
+func DeclConstGroup(specs []ConstSpec, doc string, leading ...ast.Node) ConstGroupDecl {
+	return ConstGroupDecl{Specs: specs, Doc: doc, Leading: leading}
+}
+
+func ConstSpecNew(name string, typ *TypeExpr, value string, doc string) ConstSpec {
+	return ConstSpec{Name: name, Type: typ, Value: value, Doc: doc}
 }
