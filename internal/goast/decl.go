@@ -115,6 +115,7 @@ VarDecl declares a package-level variable initialized by a composite literal.
 type VarDecl struct {
 	Doc  string
 	Name string
+	Type *TypeExpr
 	Init *CompositeLitExpr
 }
 
@@ -179,6 +180,17 @@ func structFieldLeadingHasBlankLine(leading []ast.Node) bool {
 
 func DeclVar(name string, init *CompositeLitExpr, doc string) VarDecl {
 	return VarDecl{Name: name, Init: init, Doc: doc}
+}
+
+/*
+DeclVarArray declares a package-level array variable with a computed length expression.
+
+[Context]
+Used for compile-time layout guards such as [want - unsafe.Sizeof(T{})]byte.
+*/
+func DeclVarArray(name string, lengthExpr string, elem TypeExpr, doc string) VarDecl {
+	typ := TypeExprArray(lengthExpr, elem)
+	return VarDecl{Name: name, Type: &typ, Doc: doc}
 }
 
 func DeclFunc(name string, params []ParamType, returns []TypeExpr, body BlockStmt) FuncDecl {

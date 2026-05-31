@@ -96,6 +96,22 @@ func EmitterRender(emitter *Emitter) string {
 	return emitter.buffer.String()
 }
 
+/*
+EmitterBufferedLen returns the number of bytes accumulated in the emitter buffer.
+*/
+func EmitterBufferedLen(emitter *Emitter) int {
+	return emitter.buffer.Len()
+}
+
+/*
+EmitterReset clears buffered output and indentation state for reuse after a flush.
+*/
+func EmitterReset(emitter *Emitter) {
+	emitter.buffer.Reset()
+	emitter.indentLevel = 0
+	emitter.pendingIndent = false
+}
+
 func emitterHandleIndent(emitter *Emitter) {
 	if !emitter.pendingIndent {
 		return

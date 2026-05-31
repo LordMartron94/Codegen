@@ -102,6 +102,16 @@ func GoLineComment(text string) codegen.FileElement {
 }
 
 /*
+GoBuildConstraint returns a file element for a //go:build directive.
+
+[Parameters]
+tag — build constraint expression (for example "linux" or "windows").
+*/
+func GoBuildConstraint(tag string) codegen.FileElement {
+	return codegen.FileElementFrom(goast.LayoutBuildConstraintNew(tag))
+}
+
+/*
 GoBlockComment returns a file element for multiple comment lines.
 
 [Returns]

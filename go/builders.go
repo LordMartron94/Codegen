@@ -223,7 +223,8 @@ type ParamType = goast.ParamType
 
 const (
 	KindBlankLine        = goast.KindBlankLine
-	KindLineComment      = goast.KindLineComment
+	KindLineComment       = goast.KindLineComment
+	KindBuildConstraint   = goast.KindBuildConstraint
 	KindBlockComment     = goast.KindBlockComment
 	KindGoDocComment     = goast.KindGoDocComment
 	KindFile             = goast.KindFile
@@ -313,6 +314,13 @@ func DeclVar(name string, init *CompositeLitExpr, doc string) VarDecl {
 	return goast.DeclVar(name, init, doc)
 }
 
+/*
+DeclVarArray declares a package-level array variable with a computed length expression.
+*/
+func DeclVarArray(name string, lengthExpr string, elem TypeExpr, doc string) VarDecl {
+	return goast.DeclVarArray(name, lengthExpr, elem, doc)
+}
+
 func ConstSpecNew(name string, typ *TypeExpr, value string, doc string) ConstSpec {
 	return goast.ConstSpecNew(name, typ, value, doc)
 }
@@ -355,6 +363,13 @@ func TypeExprPointer(elem TypeExpr) TypeExpr {
 
 func TypeExprArray(length string, elem TypeExpr) TypeExpr {
 	return goast.TypeExprArray(length, elem)
+}
+
+/*
+TypeExprSlice builds a Go slice type expression.
+*/
+func TypeExprSlice(elem TypeExpr) TypeExpr {
+	return goast.TypeExprSlice(elem)
 }
 
 /*
@@ -412,6 +427,9 @@ func ExprCompositeLit(typeName string, fields []FieldInit) *CompositeLitExpr {
 	return goast.ExprCompositeLit(typeName, fields)
 }
 
+/*
+ExprSliceCompositeLit builds a Go slice composite literal from element expressions.
+*/
 func ExprSliceCompositeLit(elementTypeName string, elements []ast.Expr) *CompositeLitExpr {
 	return goast.ExprSliceCompositeLit(elementTypeName, elements)
 }

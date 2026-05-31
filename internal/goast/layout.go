@@ -36,6 +36,15 @@ type GoDocComment struct {
 
 func (GoDocComment) NodeKind() ast.NodeKind { return KindGoDocComment }
 
+/*
+BuildConstraint is a Go build constraint directive (//go:build tag).
+*/
+type BuildConstraint struct {
+	Tag string
+}
+
+func (BuildConstraint) NodeKind() ast.NodeKind { return KindBuildConstraint }
+
 func LayoutBlankLineNew() BlankLine {
 	return BlankLine{}
 }
@@ -50,6 +59,10 @@ func LayoutBlockCommentNew(lines ...string) BlockComment {
 
 func LayoutGoDocCommentNew(lines ...string) GoDocComment {
 	return GoDocComment{Lines: lines}
+}
+
+func LayoutBuildConstraintNew(tag string) BuildConstraint {
+	return BuildConstraint{Tag: tag}
 }
 
 func LayoutGoDocCommentFromText(text string) GoDocComment {

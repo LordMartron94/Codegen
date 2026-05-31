@@ -19,6 +19,8 @@ const (
 	KindBlockComment
 	/* KindGoDocComment is a Go block documentation comment. */
 	KindGoDocComment
+	/* KindBuildConstraint is a //go:build or // +build constraint line. */
+	KindBuildConstraint
 
 	/* KindFile is a generated Go source file root. */
 	KindFile

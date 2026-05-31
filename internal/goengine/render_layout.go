@@ -27,6 +27,12 @@ func renderBlockComment(ctx *engine.RenderContext, node ast.Node) error {
 	return nil
 }
 
+func renderBuildConstraint(ctx *engine.RenderContext, node ast.Node) error {
+	constraint := node.(goast.BuildConstraint)
+	emit.EmitterWriteLineFormatted(ctx.Emitter, "//go:build %s", constraint.Tag)
+	return nil
+}
+
 func renderGoDocComment(ctx *engine.RenderContext, node ast.Node) error {
 	comment := node.(goast.GoDocComment)
 	emit.EmitterWriteLine(ctx.Emitter, "/*")

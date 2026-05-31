@@ -22,6 +22,7 @@ func GoEngineCreate() *engine.Engine {
 	engine.EngineRegister(eng, goast.KindLineComment, renderLineComment)
 	engine.EngineRegister(eng, goast.KindBlockComment, renderBlockComment)
 	engine.EngineRegister(eng, goast.KindGoDocComment, renderGoDocComment)
+	engine.EngineRegister(eng, goast.KindBuildConstraint, renderBuildConstraint)
 
 	engine.EngineRegister(eng, goast.KindFile, renderFile)
 	engine.EngineRegister(eng, goast.KindPackageDecl, renderPackageDecl)

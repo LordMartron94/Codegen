@@ -142,7 +142,16 @@ func renderVarDecl(ctx *engine.RenderContext, node ast.Node) error {
 			return err
 		}
 	}
-	emit.EmitterWriteFormatted(ctx.Emitter, "var %s = ", decl.Name)
+	emit.EmitterWriteFormatted(ctx.Emitter, "var %s", decl.Name)
+	if decl.Type != nil {
+		emit.EmitterWrite(ctx.Emitter, " ")
+		if err := GoRenderTypeExpr(ctx, *decl.Type); err != nil {
+			return err
+		}
+		emit.EmitterLineBreak(ctx.Emitter)
+		return nil
+	}
+	emit.EmitterWrite(ctx.Emitter, " = ")
 	if decl.Init == nil {
 		emit.EmitterWrite(ctx.Emitter, "nil")
 		emit.EmitterLineBreak(ctx.Emitter)
