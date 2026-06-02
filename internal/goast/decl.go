@@ -136,6 +136,26 @@ type FuncDecl struct {
 
 func (FuncDecl) NodeKind() ast.NodeKind { return KindFuncDecl }
 
+/*
+MethodDecl declares a method with a receiver, signature, and body.
+
+[Context]
+Renders as func (recv Type) Name(params) result { body } in Go.
+*/
+type MethodDecl struct {
+	Leading      []ast.Node
+	Doc          string
+	ReceiverName string
+	ReceiverType TypeExpr
+	ReceiverPtr  bool
+	Name         string
+	Params       []ParamType
+	Returns      []TypeExpr
+	Body         BlockStmt
+}
+
+func (MethodDecl) NodeKind() ast.NodeKind { return KindMethodDecl }
+
 func DeclPackage(name string) PackageDecl {
 	return PackageDecl{Name: name}
 }
@@ -195,6 +215,26 @@ func DeclVarArray(name string, lengthExpr string, elem TypeExpr, doc string) Var
 
 func DeclFunc(name string, params []ParamType, returns []TypeExpr, body BlockStmt) FuncDecl {
 	return FuncDecl{Name: name, Params: params, Returns: returns, Body: body}
+}
+
+func DeclMethod(
+	receiverName string,
+	receiverType TypeExpr,
+	receiverPtr bool,
+	name string,
+	params []ParamType,
+	returns []TypeExpr,
+	body BlockStmt,
+) MethodDecl {
+	return MethodDecl{
+		ReceiverName: receiverName,
+		ReceiverType: receiverType,
+		ReceiverPtr:  receiverPtr,
+		Name:         name,
+		Params:       params,
+		Returns:      returns,
+		Body:         body,
+	}
 }
 
 func StructFieldType(name string, typ TypeExpr) StructFieldDecl {

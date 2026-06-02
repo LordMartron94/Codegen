@@ -49,6 +49,18 @@ func renderCallExpr(ctx *engine.RenderContext, node ast.Node) error {
 	if err := engine.EngineRenderExpr(ctx, expr.Callee); err != nil {
 		return err
 	}
+	if len(expr.TypeArgs) > 0 {
+		emit.EmitterWrite(ctx.Emitter, "[")
+		for i, typeArg := range expr.TypeArgs {
+			if i != 0 {
+				emit.EmitterWrite(ctx.Emitter, ", ")
+			}
+			if err := GoRenderTypeExpr(ctx, typeArg); err != nil {
+				return err
+			}
+		}
+		emit.EmitterWrite(ctx.Emitter, "]")
+	}
 	emit.EmitterWrite(ctx.Emitter, "(")
 	for i, arg := range expr.Args {
 		if i != 0 {

@@ -102,6 +102,11 @@ FuncDecl declares a Go function with signature and body block.
 type FuncDecl = goast.FuncDecl
 
 /*
+MethodDecl declares a Go method with receiver, signature, and body block.
+*/
+type MethodDecl = goast.MethodDecl
+
+/*
 BlockStmt groups statements with optional leading layout nodes.
 */
 type BlockStmt = goast.BlockStmt
@@ -223,8 +228,8 @@ type ParamType = goast.ParamType
 
 const (
 	KindBlankLine        = goast.KindBlankLine
-	KindLineComment       = goast.KindLineComment
-	KindBuildConstraint   = goast.KindBuildConstraint
+	KindLineComment      = goast.KindLineComment
+	KindBuildConstraint  = goast.KindBuildConstraint
 	KindBlockComment     = goast.KindBlockComment
 	KindGoDocComment     = goast.KindGoDocComment
 	KindFile             = goast.KindFile
@@ -235,6 +240,7 @@ const (
 	KindConstGroupDecl   = goast.KindConstGroupDecl
 	KindVarDecl          = goast.KindVarDecl
 	KindFuncDecl         = goast.KindFuncDecl
+	KindMethodDecl       = goast.KindMethodDecl
 	KindBlockStmt        = goast.KindBlockStmt
 	KindVarDeclStmt      = goast.KindVarDeclStmt
 	KindShortVarDeclStmt = goast.KindShortVarDeclStmt
@@ -383,6 +389,21 @@ func DeclFunc(name string, params []ParamType, returns []TypeExpr, body BlockStm
 	return goast.DeclFunc(name, params, returns, body)
 }
 
+/*
+DeclMethod builds a method declaration with receiver, signature, and body.
+*/
+func DeclMethod(
+	receiverName string,
+	receiverType TypeExpr,
+	receiverPtr bool,
+	name string,
+	params []ParamType,
+	returns []TypeExpr,
+	body BlockStmt,
+) MethodDecl {
+	return goast.DeclMethod(receiverName, receiverType, receiverPtr, name, params, returns, body)
+}
+
 func ExprIdent(name string) *IdentExpr {
 	return goast.ExprIdent(name)
 }
@@ -401,6 +422,13 @@ func ExprAddressOf(operand ast.Expr) *AddressOfExpr {
 
 func ExprCall(callee ast.Expr, args ...ast.Expr) *CallExpr {
 	return goast.ExprCall(callee, args...)
+}
+
+/*
+ExprCallInstantiate builds a generic instantiation call callee[T](args...).
+*/
+func ExprCallInstantiate(callee ast.Expr, typeArgs []TypeExpr, args ...ast.Expr) *CallExpr {
+	return goast.ExprCallInstantiate(callee, typeArgs, args...)
 }
 
 func ExprStringLit(value string) *StringLitExpr {
@@ -444,6 +472,17 @@ func StmtVarDecl(name string, typ TypeExpr, isSlice bool) VarDeclStmt {
 
 func StmtShortVarDecl(name string, rhs ast.Expr) ShortVarDeclStmt {
 	return goast.StmtShortVarDecl(name, rhs)
+}
+
+/*
+StmtAssign assigns rhs to lhs with = syntax.
+*/
+func StmtAssign(lhs ast.Expr, rhs ast.Expr) AssignStmt {
+	return goast.StmtAssign(lhs, rhs)
+}
+
+func StmtAssignName(name string, rhs ast.Expr) AssignStmt {
+	return goast.StmtAssignName(name, rhs)
 }
 
 func StmtRangeLoop(collection string, elementName string, body BlockStmt) RangeLoopStmt {

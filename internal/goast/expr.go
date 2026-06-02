@@ -64,10 +64,14 @@ func (e *AddressOfExpr) NodeKind() ast.NodeKind { return KindAddressOfExpr }
 
 /*
 CallExpr invokes a callee with arguments.
+
+[Context]
+When TypeArgs is non-empty, renders as callee[T0, T1, ...](args).
 */
 type CallExpr struct {
-	Callee ast.Expr
-	Args   []ast.Expr
+	Callee   ast.Expr
+	TypeArgs []TypeExpr
+	Args     []ast.Expr
 }
 
 func (e *CallExpr) NodeKind() ast.NodeKind { return KindCallExpr }
@@ -155,6 +159,10 @@ func ExprAddressOf(operand ast.Expr) *AddressOfExpr {
 
 func ExprCall(callee ast.Expr, args ...ast.Expr) *CallExpr {
 	return &CallExpr{Callee: callee, Args: args}
+}
+
+func ExprCallInstantiate(callee ast.Expr, typeArgs []TypeExpr, args ...ast.Expr) *CallExpr {
+	return &CallExpr{Callee: callee, TypeArgs: typeArgs, Args: args}
 }
 
 func ExprStringLit(value string) *StringLitExpr {

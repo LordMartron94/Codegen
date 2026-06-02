@@ -55,7 +55,14 @@ func renderShortVarDeclStmt(ctx *engine.RenderContext, node ast.Node) error {
 
 func renderAssignStmt(ctx *engine.RenderContext, node ast.Node) error {
 	stmt := node.(goast.AssignStmt)
-	emit.EmitterWriteFormatted(ctx.Emitter, "%s = ", stmt.Name)
+	if stmt.Lhs != nil {
+		if err := engine.EngineRenderExpr(ctx, stmt.Lhs); err != nil {
+			return err
+		}
+	} else {
+		emit.EmitterWrite(ctx.Emitter, stmt.Name)
+	}
+	emit.EmitterWrite(ctx.Emitter, " = ")
 	if err := engine.EngineRenderExpr(ctx, stmt.Rhs); err != nil {
 		return err
 	}
@@ -91,13 +98,27 @@ func renderIfStmt(ctx *engine.RenderContext, node ast.Node) error {
 	stmt := node.(goast.IfStmt)
 	emit.EmitterWrite(ctx.Emitter, "if ")
 	if stmt.Init != nil {
-		if initDecl, ok := stmt.Init.(goast.ShortVarDeclStmt); ok {
-			emit.EmitterWriteFormatted(ctx.Emitter, "%s := ", initDecl.Name)
-			if err := engine.EngineRenderExpr(ctx, initDecl.Rhs); err != nil {
+		switch init := stmt.Init.(type) {
+		case goast.ShortVarDeclStmt:
+			emit.EmitterWriteFormatted(ctx.Emitter, "%s := ", init.Name)
+			if err := engine.EngineRenderExpr(ctx, init.Rhs); err != nil {
 				return err
 			}
 			emit.EmitterWrite(ctx.Emitter, "; ")
-		} else {
+		case goast.AssignStmt:
+			if init.Lhs != nil {
+				if err := engine.EngineRenderExpr(ctx, init.Lhs); err != nil {
+					return err
+				}
+			} else {
+				emit.EmitterWrite(ctx.Emitter, init.Name)
+			}
+			emit.EmitterWrite(ctx.Emitter, " = ")
+			if err := engine.EngineRenderExpr(ctx, init.Rhs); err != nil {
+				return err
+			}
+			emit.EmitterWrite(ctx.Emitter, "; ")
+		default:
 			if err := engine.EngineRenderStmt(ctx, stmt.Init); err != nil {
 				return err
 			}

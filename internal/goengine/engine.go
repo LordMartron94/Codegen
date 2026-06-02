@@ -32,6 +32,7 @@ func GoEngineCreate() *engine.Engine {
 	engine.EngineRegister(eng, goast.KindConstGroupDecl, renderConstGroupDecl)
 	engine.EngineRegister(eng, goast.KindVarDecl, renderVarDecl)
 	engine.EngineRegister(eng, goast.KindFuncDecl, renderFuncDecl)
+	engine.EngineRegister(eng, goast.KindMethodDecl, renderMethodDecl)
 
 	engine.EngineRegister(eng, goast.KindBlockStmt, renderBlockStmtNode)
 	engine.EngineRegister(eng, goast.KindVarDeclStmt, renderVarDeclStmt)

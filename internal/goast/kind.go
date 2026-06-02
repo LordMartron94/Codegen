@@ -38,6 +38,8 @@ const (
 	KindVarDecl
 	/* KindFuncDecl is a function declaration. */
 	KindFuncDecl
+	/* KindMethodDecl is a method declaration with a receiver. */
+	KindMethodDecl
 
 	/* KindBlockStmt is a statement block. */
 	KindBlockStmt

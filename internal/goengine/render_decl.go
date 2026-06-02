@@ -199,6 +199,61 @@ func renderFuncDecl(ctx *engine.RenderContext, node ast.Node) error {
 	return nil
 }
 
+func renderMethodDecl(ctx *engine.RenderContext, node ast.Node) error {
+	decl := node.(goast.MethodDecl)
+	for _, leading := range decl.Leading {
+		if err := engine.EngineRenderNode(ctx, leading); err != nil {
+			return err
+		}
+	}
+	if decl.Doc != "" {
+		if err := renderDocumentation(ctx, decl.Name, decl.Doc); err != nil {
+			return err
+		}
+	}
+	emit.EmitterWrite(ctx.Emitter, "func (")
+	emit.EmitterWriteFormatted(ctx.Emitter, "%s ", decl.ReceiverName)
+	if decl.ReceiverPtr {
+		emit.EmitterWrite(ctx.Emitter, "*")
+	}
+	if err := GoRenderTypeExpr(ctx, decl.ReceiverType); err != nil {
+		return err
+	}
+	emit.EmitterWriteFormatted(ctx.Emitter, ") %s(", decl.Name)
+	for i, param := range decl.Params {
+		if i != 0 {
+			emit.EmitterWrite(ctx.Emitter, ", ")
+		}
+		if param.Name != "" {
+			emit.EmitterWriteFormatted(ctx.Emitter, "%s ", param.Name)
+		}
+		if err := GoRenderTypeExpr(ctx, param.Type); err != nil {
+			return err
+		}
+	}
+	emit.EmitterWrite(ctx.Emitter, ")")
+	if len(decl.Returns) > 0 {
+		emit.EmitterWrite(ctx.Emitter, " ")
+		for i, ret := range decl.Returns {
+			if i != 0 {
+				emit.EmitterWrite(ctx.Emitter, ", ")
+			}
+			if err := GoRenderTypeExpr(ctx, ret); err != nil {
+				return err
+			}
+		}
+	}
+	emit.EmitterWrite(ctx.Emitter, " {")
+	emit.EmitterLineBreak(ctx.Emitter)
+	emit.EmitterIndent(ctx.Emitter)
+	if err := renderBlockStmt(ctx, decl.Body); err != nil {
+		return err
+	}
+	emit.EmitterDedent(ctx.Emitter)
+	emit.EmitterWriteLine(ctx.Emitter, "}")
+	return nil
+}
+
 func renderFuncTypeSig(ctx *engine.RenderContext, sig goast.FuncTypeSig) error {
 	emit.EmitterWrite(ctx.Emitter, "func(")
 	for i, param := range sig.Params {

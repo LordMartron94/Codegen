@@ -43,9 +43,13 @@ type ShortVarDeclStmt struct {
 func (ShortVarDeclStmt) NodeKind() ast.NodeKind { return KindShortVarDeclStmt }
 
 /*
-AssignStmt assigns an expression to a name with = syntax.
+AssignStmt assigns an expression with = syntax.
+
+[Context]
+When Lhs is set it is rendered as the assignment target; otherwise Name is used.
 */
 type AssignStmt struct {
+	Lhs  ast.Expr
 	Name string
 	Rhs  ast.Expr
 }
@@ -106,6 +110,14 @@ func StmtVarDecl(name string, typ TypeExpr, isSlice bool) VarDeclStmt {
 
 func StmtShortVarDecl(name string, rhs ast.Expr) ShortVarDeclStmt {
 	return ShortVarDeclStmt{Name: name, Rhs: rhs}
+}
+
+func StmtAssign(lhs ast.Expr, rhs ast.Expr) AssignStmt {
+	return AssignStmt{Lhs: lhs, Rhs: rhs}
+}
+
+func StmtAssignName(name string, rhs ast.Expr) AssignStmt {
+	return AssignStmt{Name: name, Rhs: rhs}
 }
 
 func StmtRangeLoop(collection string, elementName string, body BlockStmt) RangeLoopStmt {
